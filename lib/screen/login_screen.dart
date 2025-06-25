@@ -1,39 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_providers.dart';
-import '../utils/app_theme.dart';
+import 'main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final _loginFormKey = GlobalKey<FormState>();
-  final _registerFormKey = GlobalKey<FormState>();
+class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _loginEmailController = TextEditingController();
+  final TextEditingController _loginPasswordController =
+      TextEditingController();
+  final TextEditingController _registerUsernameController =
+      TextEditingController();
+  final TextEditingController _registerEmailController =
+      TextEditingController();
+  final TextEditingController _registerPasswordController =
+      TextEditingController();
 
-  // Login controllers
-  final _loginEmailController = TextEditingController();
-  final _loginPasswordController = TextEditingController();
-
-  // Register controllers
-  final _registerUsernameController = TextEditingController();
-  final _registerEmailController = TextEditingController();
-  final _registerPasswordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
+  bool _showRegister = false;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
-    _tabController.dispose();
     _loginEmailController.dispose();
     _loginPasswordController.dispose();
     _registerUsernameController.dispose();
@@ -42,74 +35,209 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  void _switchToRegister() {
+    setState(() {
+      _showRegister = true;
+      _errorMessage = null;
+    });
+  }
+
+  void _switchToLogin() {
+    setState(() {
+      _showRegister = false;
+      _errorMessage = null;
+    });
+  }
+
+  Future<void> _handleLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.login(
+        _loginEmailController.text.trim(),
+        _loginPasswordController.text.trim(),
+      );
+      if (success) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainScreen()),
+        );
+      } else {
+        setState(() {
+          _errorMessage = 'Login gagal. Email atau password salah.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Terjadi kesalahan saat login.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _handleRegister() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final success = await authProvider.register(
+        _registerUsernameController.text.trim(),
+        _registerEmailController.text.trim(),
+        _registerPasswordController.text.trim(),
+      );
+      if (success) {
+        setState(() {
+          _showRegister = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Registrasi berhasil! Silakan login.')),
+        );
+      } else {
+        setState(() {
+          _errorMessage = 'Registrasi gagal. Email sudah digunakan.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Terjadi kesalahan saat registrasi.';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppTheme.primaryColor,
-              AppTheme.primaryColor.withOpacity(0.8),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 40),
-              const Icon(
-                Icons.restaurant,
-                size: 60,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'BaliKuliner',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+      backgroundColor: Colors.green[50],
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, 8),
                 ),
-              ),
-              const SizedBox(height: 40),
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: CircleAvatar(
+                    radius: 36,
+                    backgroundColor: Colors.green[100],
+                    child: const Icon(
+                      Icons.restaurant_menu,
+                      color: Colors.green,
+                      size: 40,
                     ),
                   ),
-                  child: Column(
+                ),
+                Text(
+                  'BaliKuliner',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
+                  ),
+                ),
+                const SizedBox(height: 24),
+                if (_errorMessage != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(color: Colors.red, fontSize: 14),
+                    ),
+                  ),
+                !_showRegister ? _buildLoginForm() : _buildRegisterForm(),
+                const SizedBox(height: 24),
+                if (!_showRegister)
+                  Column(
                     children: [
-                      TabBar(
-                        controller: _tabController,
-                        labelColor: AppTheme.primaryColor,
-                        unselectedLabelColor: Colors.grey,
-                        tabs: const [
-                          Tab(text: 'Login'),
-                          Tab(text: 'Register'),
-                        ],
-                      ),
-                      Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildLoginForm(),
-                            _buildRegisterForm(),
-                          ],
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[700],
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Login'),
                         ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: _isLoading ? null : _switchToRegister,
+                        child: const Text('Belum punya akun? Register'),
                       ),
                     ],
                   ),
-                ),
-              ),
-            ],
+                if (_showRegister)
+                  Column(
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleRegister,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[700],
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('Register'),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: _isLoading ? null : _switchToLogin,
+                        child: const Text('Sudah punya akun? Login'),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -117,175 +245,63 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildLoginForm() {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, child) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _loginFormKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _loginEmailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _loginPasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: auth.isLoading ? null : _handleLogin,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: auth.isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Login'),
-                  ),
-                ),
-              ],
-            ),
+    return Column(
+      children: [
+        TextField(
+          controller: _loginEmailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            prefixIcon: Icon(Icons.email_rounded),
+            border: OutlineInputBorder(),
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _loginPasswordController,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Password',
+            prefixIcon: Icon(Icons.lock_rounded),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildRegisterForm() {
-    return Consumer<AuthProvider>(
-      builder: (context, auth, child) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _registerFormKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _registerUsernameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your username';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _registerEmailController,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    prefixIcon: Icon(Icons.email),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your email';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _registerPasswordController,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
-                  ),
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.length < 6) {
-                      return 'Password must be at least 6 characters';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: auth.isLoading ? null : _handleRegister,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: auth.isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text('Register'),
-                  ),
-                ),
-              ],
-            ),
+    return Column(
+      children: [
+        TextField(
+          controller: _registerUsernameController,
+          decoration: const InputDecoration(
+            labelText: 'Username',
+            prefixIcon: Icon(Icons.person_rounded),
+            border: OutlineInputBorder(),
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _registerEmailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'Email',
+            prefixIcon: Icon(Icons.email_rounded),
+            border: OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _registerPasswordController,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Password',
+            prefixIcon: Icon(Icons.lock_rounded),
+            border: OutlineInputBorder(),
+          ),
+        ),
+      ],
     );
-  }
-
-  void _handleLogin() async {
-    if (_loginFormKey.currentState!.validate()) {
-      final success = await Provider.of<AuthProvider>(context, listen: false)
-          .login(_loginEmailController.text, _loginPasswordController.text);
-
-      if (success) {
-        Navigator.pushReplacementNamed(context, '/main');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Invalid email or password'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void _handleRegister() async {
-    if (_registerFormKey.currentState!.validate()) {
-      final success =
-          await Provider.of<AuthProvider>(context, listen: false).register(
-        _registerUsernameController.text,
-        _registerEmailController.text,
-        _registerPasswordController.text,
-      );
-
-      if (success) {
-        Navigator.pushReplacementNamed(context, '/main');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Email already exists'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 }
