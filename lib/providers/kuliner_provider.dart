@@ -49,15 +49,25 @@ class KulinerProvider extends ChangeNotifier {
 
   Future<bool> addKuliner(Kuliner kuliner) async {
     try {
+      print('Adding kuliner: ${kuliner.name}');
+      print('Kuliner data: ${kuliner.toMap()}');
+
       final id = await DatabaseHelper.instance.insertKuliner(kuliner);
+      print('Insert result ID: $id');
+
       if (id > 0) {
+        print('Successfully added kuliner with ID: $id');
         await loadKuliner(); // Reload the list
         return true;
+      } else {
+        print('Failed to add kuliner - ID is 0 or negative');
+        return false;
       }
     } catch (e) {
       print('Error adding kuliner: $e');
+      print('Error stack trace: ${StackTrace.current}');
+      return false;
     }
-    return false;
   }
 
   Future<Kuliner?> getKulinerById(int id) async {

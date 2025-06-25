@@ -8,6 +8,7 @@ import 'screen/splash_screen.dart';
 import 'screen/login_screen.dart';
 import 'screen/main_screen.dart';
 import 'utils/app_theme.dart';
+import 'providers/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,15 +47,22 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider(prefs)),
         ChangeNotifierProvider(create: (_) => KulinerProvider()),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'BaliKuliner',
-        theme: AppTheme.lightTheme,
-        home: const SplashScreen(),
-        debugShowCheckedModeBanner: false,
-        routes: {
-          '/login': (context) => const LoginScreen(),
-          '/main': (context) => const MainScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'BaliKuliner',
+            theme: AppTheme.lightTheme,
+            darkTheme: ThemeData.dark(),
+            themeMode: themeProvider.materialThemeMode,
+            home: const SplashScreen(),
+            debugShowCheckedModeBanner: false,
+            routes: {
+              '/login': (context) => const LoginScreen(),
+              '/main': (context) => const MainScreen(),
+            },
+          );
         },
       ),
     );

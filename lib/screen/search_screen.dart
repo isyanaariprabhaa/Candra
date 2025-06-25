@@ -24,7 +24,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.green[50],
       appBar: AppBar(
         title: const Text(
           'Search Culinary',
@@ -33,7 +33,7 @@ class _SearchScreenState extends State<SearchScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.orange[600],
+        backgroundColor: Colors.green[600],
         elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: true,
@@ -45,9 +45,9 @@ class _SearchScreenState extends State<SearchScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Colors.orange[600]!,
-              Colors.orange[600]!.withOpacity(0.1),
-              Colors.grey[50]!,
+              Colors.green[600]!,
+              Colors.green[600]!.withOpacity(0.1),
+              Colors.green[50]!,
             ],
             stops: const [0.0, 0.3, 0.6],
           ),
@@ -76,7 +76,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     children: [
                       Icon(
                         Icons.search_rounded,
-                        color: Colors.orange[600],
+                        color: Colors.green[600],
                         size: 24,
                       ),
                       const SizedBox(width: 8),
@@ -101,7 +101,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
-                        color: Colors.orange[600],
+                        color: Colors.green[600],
                         size: 20,
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
@@ -130,7 +130,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide:
-                            BorderSide(color: Colors.orange[600]!, width: 2),
+                            BorderSide(color: Colors.green[600]!, width: 2),
                       ),
                       filled: true,
                       fillColor: Colors.grey[50],
@@ -172,13 +172,13 @@ class _SearchScreenState extends State<SearchScreen> {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: Colors.orange[50],
+                              color: Colors.green[50],
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.search_rounded,
                               size: 48,
-                              color: Colors.orange[600],
+                              color: Colors.green[600],
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -281,7 +281,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             children: [
                               Icon(
                                 Icons.restaurant_menu,
-                                color: Colors.orange[600],
+                                color: Colors.green[600],
                                 size: 20,
                               ),
                               const SizedBox(width: 8),

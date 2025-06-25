@@ -24,9 +24,6 @@ class DatabaseHelper {
   static sembast.StoreRef<String, Map<String, dynamic>>? _kulinerStore;
   static sembast.StoreRef<String, Map<String, dynamic>>? _reviewStore;
 
-  // In-memory storage for web fallback
-  static final Map<String, dynamic> _memoryStorage = {};
-
   Future<dynamic> get database async {
     if (kIsWeb) {
       return await _getSembastDatabase();
@@ -39,6 +36,15 @@ class DatabaseHelper {
     if (_database != null) return _database!;
 
     String path = join(await sqflite.getDatabasesPath(), 'balikuliner.db');
+
+    // Delete existing database to force recreation with new schema
+    try {
+      await sqflite.deleteDatabase(path);
+      print('Deleted existing database to recreate with new schema');
+    } catch (e) {
+      print('Error deleting database: $e');
+    }
+
     _database = await sqflite.openDatabase(
       path,
       version: 1,
@@ -335,7 +341,9 @@ class DatabaseHelper {
         latitude REAL,
         longitude REAL,
         image_url TEXT,
-        created_at TEXT NOT NULL
+        user_id INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id)
       )
     ''');
 
@@ -470,16 +478,31 @@ class DatabaseHelper {
   }
 
   Future<int> _insertKulinerSqlite(Kuliner kuliner) async {
-    final db = await database as sqflite.Database;
-    return await db.insert('kuliners', kuliner.toMap());
+    try {
+      final db = await database as sqflite.Database;
+      print('Inserting kuliner to SQLite: ${kuliner.toMap()}');
+      final result = await db.insert('kuliners', kuliner.toMap());
+      print('SQLite insert result: $result');
+      return result;
+    } catch (e) {
+      print('SQLite insert error: $e');
+      rethrow;
+    }
   }
 
   Future<int> _insertKulinerSembast(Kuliner kuliner) async {
-    final db = await database as sembast.Database;
-    final id = DateTime.now().millisecondsSinceEpoch;
-    final kulinerWithId = kuliner.copyWith(id: id);
-    await _kulinerStore!.add(db, kulinerWithId.toMap());
-    return id;
+    try {
+      final db = await database as sembast.Database;
+      final id = DateTime.now().millisecondsSinceEpoch;
+      final kulinerWithId = kuliner.copyWith(id: id);
+      print('Inserting kuliner to Sembast: ${kulinerWithId.toMap()}');
+      await _kulinerStore!.add(db, kulinerWithId.toMap());
+      print('Sembast insert result: $id');
+      return id;
+    } catch (e) {
+      print('Sembast insert error: $e');
+      rethrow;
+    }
   }
 
   Future<List<Kuliner>> getAllKuliner() async {

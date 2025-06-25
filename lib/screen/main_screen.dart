@@ -51,7 +51,8 @@ class _MainScreenState extends State<MainScreen> {
         child: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           currentIndex: _selectedIndex,
-          selectedItemColor: Colors.orange[600],
+          selectedItemColor:
+              _selectedIndex == 1 ? Colors.green[600] : Colors.orange[600],
           unselectedItemColor: Colors.grey[600],
           backgroundColor: Colors.white,
           elevation: 0,
@@ -89,7 +90,7 @@ class _MainScreenState extends State<MainScreen> {
               activeIcon: Icon(
                 Icons.search_rounded,
                 size: 24,
-                color: Colors.orange[600],
+                color: Colors.green[600],
               ),
               label: 'Search',
             ),
