@@ -6,6 +6,7 @@ import '../utils/app_theme.dart';
 import 'home_screen.dart';
 import 'add_kuliner_screen.dart';
 import 'profile_screen.dart';
+import 'search_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -19,6 +20,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
+    const SearchScreen(),
     const AddKulinerScreen(),
     const ProfileScreen(),
   ];
@@ -79,6 +81,18 @@ class _MainScreenState extends State<MainScreen> {
                 color: Colors.orange[600],
               ),
               label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.search_rounded,
+                size: 24,
+              ),
+              activeIcon: Icon(
+                Icons.search_rounded,
+                size: 24,
+                color: Colors.orange[600],
+              ),
+              label: 'Search',
             ),
             BottomNavigationBarItem(
               icon: Icon(

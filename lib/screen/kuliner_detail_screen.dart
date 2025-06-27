@@ -27,21 +27,37 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadReviews();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadReviews();
+    });
   }
 
   void _loadReviews() async {
-    setState(() {
-      _isLoading = true;
-    });
+    try {
+      setState(() {
+        _isLoading = true;
+      });
 
-    final reviews = await Provider.of<KulinerProvider>(context, listen: false)
-        .getReviewsForKuliner(widget.kuliner.id!);
+      final reviews = await Provider.of<KulinerProvider>(context, listen: false)
+          .getReviewsForKuliner(widget.kuliner.id!);
 
-    setState(() {
-      _reviews = reviews;
-      _isLoading = false;
-    });
+      if (mounted) {
+        setState(() {
+          _reviews = reviews;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading reviews: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading reviews: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -61,7 +77,6 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
-            _buildMapsSection(),
             _buildInfo(),
             _buildReviewSection(),
           ],
@@ -76,8 +91,90 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
   }
 
   Widget _buildHeader() {
-    final imageUrl = widget.kuliner.imageUrl;
-    if (imageUrl == null || imageUrl.isEmpty) {
+    try {
+      final imageUrl = widget.kuliner.imageUrl;
+      if (imageUrl == null || imageUrl.isEmpty) {
+        return Container(
+          height: 200,
+          width: double.infinity,
+          color: Colors.grey[300],
+          child: const Icon(
+            Icons.restaurant,
+            size: 80,
+            color: Colors.grey,
+          ),
+        );
+      }
+
+      Widget imageWidget;
+      if (imageUrl.startsWith('assets/')) {
+        imageWidget = Image.asset(
+          imageUrl,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 200,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading asset image: $imageUrl: ${error.toString()}');
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.restaurant, size: 80, color: Colors.grey),
+            );
+          },
+        );
+      } else if (imageUrl.startsWith('http')) {
+        imageWidget = Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 200,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 200,
+              color: Colors.grey[300],
+              child: Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                      : null,
+                ),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            print(
+                'Error loading network image: $imageUrl: ${error.toString()}');
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.restaurant, size: 80, color: Colors.grey),
+            );
+          },
+        );
+      } else {
+        imageWidget = Image.file(
+          File(imageUrl),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: 200,
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading file image: $imageUrl: ${error.toString()}');
+            return Container(
+              color: Colors.grey[300],
+              child: const Icon(Icons.restaurant, size: 80, color: Colors.grey),
+            );
+          },
+        );
+      }
+
+      return Container(
+        height: 200,
+        width: double.infinity,
+        color: Colors.grey[300],
+        child: imageWidget,
+      );
+    } catch (e) {
+      print('Error building header: $e');
       return Container(
         height: 200,
         width: double.infinity,
@@ -89,98 +186,6 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
         ),
       );
     }
-    Widget imageWidget;
-    if (imageUrl.startsWith('assets/')) {
-      imageWidget = Image.asset(
-        imageUrl,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: 200,
-        errorBuilder: (context, error, stackTrace) {
-          print('Error loading asset image: $imageUrl: ${error.toString()}');
-          return const Icon(Icons.restaurant, size: 80, color: Colors.grey);
-        },
-      );
-    } else if (imageUrl.startsWith('http')) {
-      imageWidget = Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: 200,
-        errorBuilder: (context, error, stackTrace) {
-          print('Error loading network image: $imageUrl: ${error.toString()}');
-          return const Icon(Icons.restaurant, size: 80, color: Colors.grey);
-        },
-      );
-    } else {
-      imageWidget = Image.file(
-        File(imageUrl),
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: 200,
-        errorBuilder: (context, error, stackTrace) {
-          print('Error loading file image: $imageUrl: ${error.toString()}');
-          return const Icon(Icons.restaurant, size: 80, color: Colors.grey);
-        },
-      );
-    }
-    return Container(
-      height: 200,
-      width: double.infinity,
-      color: Colors.grey[300],
-      child: imageWidget,
-    );
-  }
-
-  Widget _buildMapsSection() {
-    final lat = widget.kuliner.latitude;
-    final lng = widget.kuliner.longitude;
-    final LatLng position = LatLng(lat, lng);
-
-    if (kIsWeb) {
-      // Tampilkan pesan atau gambar statis jika di web
-      return Container(
-        height: 200,
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.green.shade100),
-          color: Colors.grey[200],
-        ),
-        child: Center(
-          child: Text('Peta hanya tersedia di aplikasi mobile.'),
-        ),
-      );
-    }
-
-    // Tampilkan GoogleMap jika di mobile
-    return Container(
-      height: 200,
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green.shade100),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: position,
-            zoom: 15,
-          ),
-          markers: {
-            Marker(
-              markerId: const MarkerId('kuliner'),
-              position: position,
-              infoWindow: InfoWindow(title: widget.kuliner.name),
-            ),
-          },
-          zoomControlsEnabled: false,
-          myLocationButtonEnabled: false,
-          liteModeEnabled: true,
-        ),
-      ),
-    );
   }
 
   Widget _buildInfo() {
@@ -449,50 +454,75 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
   }
 
   void _submitReview(int rating, String comment) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final kulinerProvider =
-        Provider.of<KulinerProvider>(context, listen: false);
-
-    double? latitude;
-    double? longitude;
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (serviceEnabled) {
-        LocationPermission permission = await Geolocator.checkPermission();
-        if (permission == LocationPermission.denied) {
-          permission = await Geolocator.requestPermission();
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final kulinerProvider =
+          Provider.of<KulinerProvider>(context, listen: false);
+
+      // Check if user is logged in
+      if (authProvider.currentUser == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please login to add a review')),
+        );
+        return;
+      }
+
+      // Check if comment is not empty
+      if (comment.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a comment')),
+        );
+        return;
+      }
+
+      double? latitude;
+      double? longitude;
+
+      try {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (serviceEnabled) {
+          LocationPermission permission = await Geolocator.checkPermission();
+          if (permission == LocationPermission.denied) {
+            permission = await Geolocator.requestPermission();
+          }
+          if (permission == LocationPermission.whileInUse ||
+              permission == LocationPermission.always) {
+            Position position = await Geolocator.getCurrentPosition();
+            latitude = position.latitude;
+            longitude = position.longitude;
+          }
         }
-        if (permission == LocationPermission.whileInUse ||
-            permission == LocationPermission.always) {
-          Position position = await Geolocator.getCurrentPosition();
-          latitude = position.latitude;
-          longitude = position.longitude;
-        }
+      } catch (e) {
+        print('Error getting location: $e');
+        // Jika gagal ambil lokasi, biarkan null
+      }
+
+      final review = Review(
+        kulinerId: widget.kuliner.id!,
+        userId: authProvider.currentUser!.id!,
+        rating: rating,
+        comment: comment.trim(),
+        createdAt: DateTime.now(),
+        latitude: latitude,
+        longitude: longitude,
+        username: authProvider.currentUser!.username,
+      );
+
+      await kulinerProvider.addReview(review);
+
+      if (mounted) {
+        _loadReviews(); // Refresh reviews
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Review added successfully!')),
+        );
       }
     } catch (e) {
-      // Jika gagal ambil lokasi, biarkan null
-    }
-
-    final review = Review(
-      kulinerId: widget.kuliner.id!,
-      userId: authProvider.currentUser!.id!,
-      rating: rating,
-      comment: comment,
-      createdAt: DateTime.now(),
-      latitude: latitude,
-      longitude: longitude,
-    );
-
-    try {
-      await kulinerProvider.addReview(review);
-      _loadReviews(); // Refresh reviews
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review added successfully!')),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error adding review: $e')),
-      );
+      print('Error submitting review: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error adding review: $e')),
+        );
+      }
     }
   }
 }

@@ -52,23 +52,6 @@ class _HomeScreenBody extends StatefulWidget {
 }
 
 class _HomeScreenBodyState extends State<_HomeScreenBody> {
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  String? _selectedCategory;
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<String> _getCategories(List kulinerList) {
-    final categories =
-        kulinerList.map((k) => k.category).toSet().toList().cast<String>();
-    categories.sort();
-    return categories;
-  }
-
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
@@ -83,24 +66,6 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
           }
 
           final allKuliner = kulinerProvider.kulinerList;
-          final categories = _getCategories(allKuliner);
-
-          // Filter berdasarkan kategori dan search
-          List kulinerList = allKuliner;
-          if (_selectedCategory != null) {
-            kulinerList = kulinerList
-                .where((k) => k.category == _selectedCategory)
-                .toList();
-          }
-          if (_searchQuery.isNotEmpty) {
-            kulinerList = kulinerList
-                .where((k) =>
-                    k.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                    k.address
-                        .toLowerCase()
-                        .contains(_searchQuery.toLowerCase()))
-                .toList();
-          }
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,86 +89,23 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                             color: Colors.grey[600],
                           ),
                     ),
-                    const SizedBox(height: 16),
-                    // Kategori
-                    SizedBox(
-                      height: 40,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: categories.length,
-                        separatorBuilder: (context, i) =>
-                            const SizedBox(width: 8),
-                        itemBuilder: (context, i) {
-                          final cat = categories[i];
-                          final selected = cat == _selectedCategory;
-                          return ChoiceChip(
-                            label: Text(cat),
-                            selected: selected,
-                            onSelected: (val) {
-                              setState(() {
-                                _selectedCategory = selected ? null : cat;
-                              });
-                            },
-                            selectedColor: Colors.green[600],
-                            labelStyle: TextStyle(
-                              color:
-                                  selected ? Colors.white : Colors.green[800],
-                              fontWeight: FontWeight.bold,
-                            ),
-                            backgroundColor: Colors.green[50],
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    // Search makanan/restoran
-                    TextField(
-                      controller: _searchController,
-                      decoration: InputDecoration(
-                        hintText: 'Cari makanan atau restoran...',
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _searchQuery = '';
-                                  });
-                                },
-                              )
-                            : null,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          _searchQuery = value;
-                        });
-                      },
-                    ),
                   ],
                 ),
               ),
               Expanded(
-                child: kulinerList.isEmpty
+                child: allKuliner.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: const [
                             Icon(
-                              Icons.search_off_rounded,
+                              Icons.restaurant_menu,
                               size: 64,
                               color: Colors.grey,
                             ),
                             SizedBox(height: 16),
                             Text(
-                              'Makanan atau restoran yang kamu cari tidak ditemukan.',
+                              'Belum ada kuliner yang ditambahkan.',
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.grey,
@@ -215,25 +117,17 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: kulinerList.length,
+                        itemCount: allKuliner.length,
                         itemBuilder: (context, index) {
-                          final kuliner = kulinerList[index];
+                          final kuliner = allKuliner[index];
                           return KulinerCard(
                             kuliner: kuliner,
                             onTap: () {
-                              showDialog(
-                                context: context,
-                                barrierDismissible: true,
-                                builder: (context) => Dialog(
-                                  insetPadding: const EdgeInsets.all(16),
-                                  child: SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.9,
-                                    height: MediaQuery.of(context).size.height *
-                                        0.85,
-                                    child:
-                                        KulinerDetailScreen(kuliner: kuliner),
-                                  ),
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      KulinerDetailScreen(kuliner: kuliner),
                                 ),
                               );
                             },

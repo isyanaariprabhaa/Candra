@@ -26,6 +26,7 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
   final _priceRangeController = TextEditingController();
 
   String _selectedCategory = 'Makanan Utama';
+  double _rating = 5.0; // Default rating
   bool _isLoading = false;
   bool _isGettingLocation = false;
   double? _latitude;
@@ -100,6 +101,8 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
                       const SizedBox(height: 16),
                       _buildDropdown(),
                       const SizedBox(height: 16),
+                      _buildRatingSelector(),
+                      const SizedBox(height: 16),
                       _buildTextInput(_priceRangeController,
                           'Rentang Harga (misal: Rp 20.000 - 50.000)',
                           labelBold: true),
@@ -161,6 +164,85 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
           }
         });
       },
+    );
+  }
+
+  Widget _buildRatingSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Rating',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey[400]!),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _rating.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    '/ 5.0',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _rating = index + 1.0;
+                      });
+                    },
+                    child: Icon(
+                      Icons.star,
+                      size: 32,
+                      color: index < _rating ? Colors.amber : Colors.grey[300],
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 8),
+              Slider(
+                value: _rating,
+                min: 1.0,
+                max: 5.0,
+                divisions: 8, // 0.5 increments
+                activeColor: Colors.amber,
+                onChanged: (value) {
+                  setState(() {
+                    _rating = value;
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -459,6 +541,7 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
           latitude: lat,
           longitude: lng,
           imageUrl: imageUrl,
+          rating: _rating,
           userId: user!.id!,
           createdAt: DateTime.now(),
         );
@@ -484,6 +567,7 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
           _longitude = null;
           setState(() {
             _selectedCategory = 'Makanan Utama';
+            _rating = 5.0; // Reset rating to default
             _pickedImage = null;
             _imageError = null;
             _imageUrl = null;
