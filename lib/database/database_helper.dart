@@ -39,12 +39,12 @@ class DatabaseHelper {
     String path = join(await sqflite.getDatabasesPath(), 'balikuliner.db');
 
     // Delete existing database to force recreation with new schema
-    try {
-      await sqflite.deleteDatabase(path);
-      print('Deleted existing database to recreate with new schema');
-    } catch (e) {
-      print('Error deleting database: $e');
-    }
+    // try {
+    //   await sqflite.deleteDatabase(path);
+    //   print('Deleted existing database to recreate with new schema');
+    // } catch (e) {
+    //   print('Error deleting database: $e');
+    // }
 
     _database = await sqflite.openDatabase(
       path,
@@ -380,41 +380,152 @@ class DatabaseHelper {
     await db.insert('users', {
       'username': 'admin',
       'email': 'admin@balikuliner.com',
-      'password': 'admin123', // sebaiknya hash di aplikasi asli
+      'password': 'admin123',
       'avatar': null,
       'created_at': DateTime.now().toIso8601String(),
     });
 
     // Sample kuliner data
-    await db.insert('kuliners', {
-      'name': 'Ayam Betutu Gilimanuk',
-      'description': 'Ayam betutu khas Bali dengan bumbu rempah tradisional',
-      'category': 'Makanan Utama',
-      'price_range': 'Rp 50.000 - 75.000',
-      'address': 'Jl. Monkey Forest Road, Ubud',
-      'latitude': -8.5069,
-      'longitude': 115.2625,
-      'image_url':
-          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
-      'rating': 4.5,
-      'user_id': 1,
-      'created_at': DateTime.now().toIso8601String(),
-    });
-
-    await db.insert('kuliners', {
-      'name': 'Bebek Bengil Dirty Duck',
-      'description': 'Bebek goreng crispy dengan sambal matah khas Bali',
-      'category': 'Makanan Utama',
-      'price_range': 'Rp 60.000 - 80.000',
-      'address': 'Jl. Hanoman, Ubud',
-      'latitude': -8.5081,
-      'longitude': 115.2656,
-      'image_url':
-          'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=600&q=80',
-      'rating': 4.7,
-      'user_id': 1,
-      'created_at': DateTime.now().toIso8601String(),
-    });
+    final kulinerList = [
+      {
+        'name': 'Ayam Betutu Gilimanuk',
+        'description': 'Ayam betutu khas Bali dengan bumbu rempah tradisional',
+        'category': 'Makanan Utama',
+        'price_range': 'Rp 50.000 - 75.000',
+        'address': 'Jl. Monkey Forest Road, Ubud',
+        'latitude': -8.5069,
+        'longitude': 115.2625,
+        'image_url':
+            'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.5,
+      },
+      {
+        'name': 'Bebek Bengil Dirty Duck',
+        'description': 'Bebek goreng crispy dengan sambal matah khas Bali',
+        'category': 'Makanan Utama',
+        'price_range': 'Rp 60.000 - 80.000',
+        'address': 'Jl. Hanoman, Ubud',
+        'latitude': -8.5081,
+        'longitude': 115.2656,
+        'image_url':
+            'https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.7,
+      },
+      {
+        'name': 'Nasi Campur Bali Men Weti',
+        'description':
+            'Nasi campur khas Bali dengan lauk lengkap dan sambal pedas.',
+        'category': 'Makanan Utama',
+        'price_range': 'Rp 25.000 - 40.000',
+        'address': 'Jl. Segara Ayu, Sanur',
+        'latitude': -8.6935,
+        'longitude': 115.2603,
+        'image_url':
+            'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.8,
+      },
+      {
+        'name': 'Sate Lilit Warung Mak Beng',
+        'description': 'Sate lilit ikan khas Bali, gurih dan wangi daun jeruk.',
+        'category': 'Seafood',
+        'price_range': 'Rp 20.000 - 35.000',
+        'address': 'Jl. Hang Tuah, Sanur',
+        'latitude': -8.6705,
+        'longitude': 115.2551,
+        'image_url':
+            'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.6,
+      },
+      {
+        'name': 'Es Daluman Segar',
+        'description': 'Minuman tradisional Bali dari cincau hijau dan santan.',
+        'category': 'Minuman',
+        'price_range': 'Rp 8.000 - 15.000',
+        'address': 'Jl. Raya Kuta, Kuta',
+        'latitude': -8.7237,
+        'longitude': 115.1750,
+        'image_url':
+            'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.3,
+      },
+      {
+        'name': 'Pie Susu Bali',
+        'description': 'Pie susu khas Bali, manis dan renyah.',
+        'category': 'Dessert',
+        'price_range': 'Rp 5.000 - 10.000',
+        'address': 'Jl. By Pass Ngurah Rai, Denpasar',
+        'latitude': -8.7231,
+        'longitude': 115.1843,
+        'image_url':
+            'https://images.unsplash.com/photo-1505250469679-203ad9ced0cb?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.4,
+      },
+      {
+        'name': 'Jaje Bali',
+        'description': 'Aneka jajanan pasar tradisional Bali.',
+        'category': 'Jajanan',
+        'price_range': 'Rp 2.000 - 10.000',
+        'address': 'Pasar Badung, Denpasar',
+        'latitude': -8.6586,
+        'longitude': 115.2167,
+        'image_url':
+            'https://images.unsplash.com/photo-1464306076886-debca5e8a6b0?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.2,
+      },
+      {
+        'name': 'Kopi Bali',
+        'description': 'Kopi robusta khas Bali, nikmat dan harum.',
+        'category': 'Minuman',
+        'price_range': 'Rp 10.000 - 25.000',
+        'address': 'Jl. Veteran, Denpasar',
+        'latitude': -8.6700,
+        'longitude': 115.2123,
+        'image_url':
+            'https://images.unsplash.com/photo-1511920170033-f8396924c348?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.6,
+      },
+      {
+        'name': 'Lawar Bali',
+        'description': 'Lawar khas Bali, campuran sayur dan daging berbumbu.',
+        'category': 'Makanan Utama',
+        'price_range': 'Rp 15.000 - 30.000',
+        'address': 'Jl. Gatot Subroto, Denpasar',
+        'latitude': -8.6520,
+        'longitude': 115.2160,
+        'image_url':
+            'https://images.unsplash.com/photo-1506089676908-3592f7389d4d?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.5,
+      },
+      {
+        'name': 'Tipat Cantok',
+        'description': 'Tipat cantok, ketupat dengan sayur dan bumbu kacang.',
+        'category': 'Jajanan',
+        'price_range': 'Rp 8.000 - 15.000',
+        'address': 'Jl. Diponegoro, Denpasar',
+        'latitude': -8.6702,
+        'longitude': 115.2125,
+        'image_url':
+            'https://images.unsplash.com/photo-1467003909585-2f8a72700288?auto=format&fit=crop&w=600&q=80',
+        'rating': 4.1,
+      },
+    ];
+    int userId = 1;
+    for (final kuliner in kulinerList) {
+      final kulinerId = await db.insert('kuliners', {
+        ...kuliner,
+        'user_id': userId,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+      // Insert dummy review for each kuliner
+      await db.insert('reviews', {
+        'kuliner_id': kulinerId,
+        'user_id': userId,
+        'rating': kuliner['rating'],
+        'comment': 'Enak banget! Wajib coba.',
+        'created_at': DateTime.now().toIso8601String(),
+        'username': 'admin',
+      });
+    }
   }
 
   // User CRUD operations

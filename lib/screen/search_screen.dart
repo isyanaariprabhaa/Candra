@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/kuliner_provider.dart';
 import 'kuliner_detail_screen.dart';
+import 'package:geolocator/geolocator.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -14,6 +15,44 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String? _selectedCategory;
+  bool _showNearest = false;
+  Position? _userPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadKulinerData();
+    _getUserLocation();
+  }
+
+  Future<void> _getUserLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) return;
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      if (permission == LocationPermission.deniedForever) return;
+      final position = await Geolocator.getCurrentPosition();
+      setState(() {
+        _userPosition = position;
+      });
+    } catch (e) {
+      // ignore error
+    }
+  }
+
+  double _distanceToUser(double lat, double lng) {
+    if (_userPosition == null) return double.infinity;
+    return Geolocator.distanceBetween(
+      _userPosition!.latitude,
+      _userPosition!.longitude,
+      lat,
+      lng,
+    );
+  }
 
   @override
   void dispose() {
@@ -26,6 +65,12 @@ class _SearchScreenState extends State<SearchScreen> {
         kulinerList.map((k) => k.category).toSet().toList().cast<String>();
     categories.sort();
     return categories;
+  }
+
+  void _loadKulinerData() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<KulinerProvider>(context, listen: false).loadKuliner();
+    });
   }
 
   @override
@@ -111,6 +156,23 @@ class _SearchScreenState extends State<SearchScreen> {
                     );
                   },
                 ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Text('Terdekat'),
+                    Switch(
+                      value: _showNearest,
+                      onChanged: (val) {
+                        setState(() {
+                          _showNearest = val;
+                        });
+                        if (val && _userPosition == null) {
+                          _getUserLocation();
+                        }
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -140,6 +202,11 @@ class _SearchScreenState extends State<SearchScreen> {
                               .contains(_searchQuery.toLowerCase()))
                       .toList();
                 }
+                if (_showNearest && _userPosition != null) {
+                  filteredKuliner.sort((a, b) =>
+                      _distanceToUser(a.latitude, a.longitude)
+                          .compareTo(_distanceToUser(b.latitude, b.longitude)));
+                }
 
                 if (filteredKuliner.isEmpty) {
                   return Center(
@@ -166,6 +233,11 @@ class _SearchScreenState extends State<SearchScreen> {
                   itemCount: filteredKuliner.length,
                   itemBuilder: (context, index) {
                     final kuliner = filteredKuliner[index];
+                    double? distance;
+                    if (_showNearest && _userPosition != null) {
+                      distance =
+                          _distanceToUser(kuliner.latitude, kuliner.longitude);
+                    }
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
@@ -175,7 +247,16 @@ class _SearchScreenState extends State<SearchScreen> {
                               Icon(Icons.restaurant, color: Colors.grey[600]),
                         ),
                         title: Text(kuliner.name),
-                        subtitle: Text(kuliner.category),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(kuliner.category),
+                            if (distance != null && distance < double.infinity)
+                              Text('Jarak: ${distance ~/ 1} m',
+                                  style: const TextStyle(
+                                      fontSize: 12, color: Colors.blueGrey)),
+                          ],
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [

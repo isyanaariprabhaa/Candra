@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'package:shimmer/shimmer.dart';
 
 class KulinerDetailScreen extends StatefulWidget {
   final Kuliner kuliner;
@@ -97,11 +98,14 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
         return Container(
           height: 200,
           width: double.infinity,
-          color: Colors.grey[300],
-          child: const Icon(
-            Icons.restaurant,
-            size: 80,
-            color: Colors.grey,
+          color: Colors.grey[200],
+          child: Center(
+            child: Image.asset(
+              'assets/images/default_kuliner.png',
+              width: 100,
+              height: 100,
+              fit: BoxFit.contain,
+            ),
           ),
         );
       }
@@ -114,10 +118,16 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
           width: double.infinity,
           height: 200,
           errorBuilder: (context, error, stackTrace) {
-            print('Error loading asset image: $imageUrl: ${error.toString()}');
             return Container(
-              color: Colors.grey[300],
-              child: const Icon(Icons.restaurant, size: 80, color: Colors.grey),
+              color: Colors.grey[200],
+              child: Center(
+                child: Image.asset(
+                  'assets/images/default_kuliner.png',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
+              ),
             );
           },
         );
@@ -129,60 +139,61 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
           height: 200,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) return child;
-            return Container(
-              height: 200,
-              color: Colors.grey[300],
-              child: Center(
-                child: CircularProgressIndicator(
-                  value: loadingProgress.expectedTotalBytes != null
-                      ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                      : null,
-                ),
+            return Shimmer.fromColors(
+              baseColor: Colors.grey[300]!,
+              highlightColor: Colors.grey[100]!,
+              child: Container(
+                height: 200,
+                width: double.infinity,
+                color: Colors.grey[300],
               ),
             );
           },
           errorBuilder: (context, error, stackTrace) {
-            print(
-                'Error loading network image: $imageUrl: ${error.toString()}');
             return Container(
-              color: Colors.grey[300],
-              child: const Icon(Icons.restaurant, size: 80, color: Colors.grey),
+              color: Colors.grey[200],
+              child: Center(
+                child: Image.asset(
+                  'assets/images/default_kuliner.png',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
+              ),
             );
           },
         );
       } else {
-        imageWidget = Image.file(
-          File(imageUrl),
-          fit: BoxFit.cover,
-          width: double.infinity,
+        imageWidget = Container(
           height: 200,
-          errorBuilder: (context, error, stackTrace) {
-            print('Error loading file image: $imageUrl: ${error.toString()}');
-            return Container(
-              color: Colors.grey[300],
-              child: const Icon(Icons.restaurant, size: 80, color: Colors.grey),
-            );
-          },
+          width: double.infinity,
+          color: Colors.grey[200],
+          child: Center(
+            child: Image.asset(
+              'assets/images/default_kuliner.png',
+              width: 100,
+              height: 100,
+              fit: BoxFit.contain,
+            ),
+          ),
         );
       }
-
-      return Container(
-        height: 200,
-        width: double.infinity,
-        color: Colors.grey[300],
+      return ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
         child: imageWidget,
       );
     } catch (e) {
-      print('Error building header: $e');
       return Container(
         height: 200,
         width: double.infinity,
-        color: Colors.grey[300],
-        child: const Icon(
-          Icons.restaurant,
-          size: 80,
-          color: Colors.grey,
+        color: Colors.grey[200],
+        child: Center(
+          child: Image.asset(
+            'assets/images/default_kuliner.png',
+            width: 100,
+            height: 100,
+            fit: BoxFit.contain,
+          ),
         ),
       );
     }
@@ -294,14 +305,21 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
               ),
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _reviews.length,
-              itemBuilder: (context, index) {
-                final review = _reviews[index];
-                return _buildReviewCard(review);
-              },
+            Container(
+              constraints: const BoxConstraints(
+                maxHeight: 320,
+              ),
+              child: Scrollbar(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _reviews.length,
+                  itemBuilder: (context, index) {
+                    final review = _reviews[index];
+                    return _buildReviewCard(review);
+                  },
+                ),
+              ),
             ),
         ],
       ),
@@ -309,8 +327,13 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
   }
 
   Widget _buildReviewCard(Review review) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final isMyReview = authProvider.currentUser != null &&
+        review.userId == authProvider.currentUser!.id;
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 16),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -329,8 +352,10 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
                   children: List.generate(5, (index) {
                     return Icon(
                       Icons.star,
-                      color: index < review.rating ? Colors.amber : Colors.grey,
-                      size: 16,
+                      color: index < review.rating
+                          ? Colors.amber
+                          : Colors.grey[300],
+                      size: 18,
                     );
                   }),
                 ),
@@ -339,15 +364,87 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
             const SizedBox(height: 8),
             Text(
               review.comment,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 15),
             ),
-            const SizedBox(height: 8),
-            Text(
-              _formatDate(review.createdAt),
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatDate(review.createdAt),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                if (isMyReview)
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(20),
+                      onTap: () async {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) =>
+                              const Center(child: CircularProgressIndicator()),
+                        );
+                        try {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Delete Review'),
+                              content: const Text(
+                                  'Are you sure you want to delete this review?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Delete',
+                                      style: TextStyle(color: Colors.red)),
+                                ),
+                              ],
+                            ),
+                          );
+                          Navigator.pop(context); // Remove loading dialog
+                          if (confirm == true) {
+                            await Provider.of<KulinerProvider>(context,
+                                    listen: false)
+                                .deleteReview(review.id!);
+                            _loadReviews();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Review deleted successfully!')),
+                            );
+                          }
+                        } catch (e) {
+                          Navigator.pop(context); // Remove loading dialog
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Error deleting review: $e')),
+                          );
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.delete,
+                          color: Colors.red,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
