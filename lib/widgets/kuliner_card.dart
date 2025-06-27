@@ -46,13 +46,13 @@ class KulinerCard extends StatelessWidget {
                     ),
                     child: kuliner.imageUrl != null &&
                             kuliner.imageUrl!.isNotEmpty
-                        ? (kuliner.imageUrl!.startsWith('assets/')
-                            ? Image.asset(
+                        ? (kuliner.imageUrl!.startsWith('http')
+                            ? Image.network(
                                 kuliner.imageUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   print(
-                                      'Error loading asset image: \\${kuliner.imageUrl}: \\${error.toString()}');
+                                      'Error loading network image: \\${kuliner.imageUrl}: \\${error.toString()}');
                                   return const Icon(
                                     Icons.restaurant,
                                     size: 80,
@@ -60,13 +60,13 @@ class KulinerCard extends StatelessWidget {
                                   );
                                 },
                               )
-                            : (kuliner.imageUrl!.startsWith('http')
-                                ? Image.network(
+                            : (kuliner.imageUrl!.startsWith('assets/')
+                                ? Image.asset(
                                     kuliner.imageUrl!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       print(
-                                          'Error loading network image: \\${kuliner.imageUrl}: \\${error.toString()}');
+                                          'Error loading asset image: \\${kuliner.imageUrl}: \\${error.toString()}');
                                       return const Icon(
                                         Icons.restaurant,
                                         size: 80,
