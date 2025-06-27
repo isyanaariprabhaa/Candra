@@ -185,4 +185,8 @@ class KulinerProvider extends ChangeNotifier {
         .where((kuliner) => kuliner.priceRange == priceRange)
         .toList();
   }
+
+  List<Kuliner> getKulinerByIds(List<int> ids) {
+    return _kulinerList.where((k) => ids.contains(k.id)).toList();
+  }
 }

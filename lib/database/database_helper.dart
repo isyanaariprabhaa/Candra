@@ -8,6 +8,7 @@ import 'package:sembast/sembast_io.dart' as sembast_io;
 import '../models/user.dart';
 import '../models/kuliner.dart';
 import '../models/review.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper _instance = DatabaseHelper._internal();
@@ -124,7 +125,7 @@ class DatabaseHelper {
       'latitude': -8.5081,
       'longitude': 115.2656,
       'image_url':
-          'https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=600&q=80',
       'rating': 4.7,
       'user_id': 1,
       'created_at': DateTime.now().toIso8601String(),
@@ -173,7 +174,7 @@ class DatabaseHelper {
       'latitude': -8.6705,
       'longitude': 115.2551,
       'image_url':
-          'https://images.unsplash.com/photo-1464306076886-debca5e8a6b0?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=600&q=80',
       'rating': 4.6,
       'user_id': 1,
       'created_at': DateTime.now().toIso8601String(),
@@ -197,7 +198,7 @@ class DatabaseHelper {
       'latitude': -8.7237,
       'longitude': 115.1750,
       'image_url':
-          'https://images.unsplash.com/photo-1504674900247-ec6b0b1b7982?auto=format&fit=crop&w=600&q=80',
+          'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80',
       'rating': 4.3,
       'user_id': 1,
       'created_at': DateTime.now().toIso8601String(),
@@ -393,6 +394,8 @@ class DatabaseHelper {
       'address': 'Jl. Monkey Forest Road, Ubud',
       'latitude': -8.5069,
       'longitude': 115.2625,
+      'image_url':
+          'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
       'rating': 4.5,
       'user_id': 1,
       'created_at': DateTime.now().toIso8601String(),
@@ -406,6 +409,8 @@ class DatabaseHelper {
       'address': 'Jl. Hanoman, Ubud',
       'latitude': -8.5081,
       'longitude': 115.2656,
+      'image_url':
+          'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?auto=format&fit=crop&w=600&q=80',
       'rating': 4.7,
       'user_id': 1,
       'created_at': DateTime.now().toIso8601String(),
@@ -993,5 +998,12 @@ class DatabaseHelper {
       final List<Map<String, dynamic>> maps = await db.query('reviews');
       return List.generate(maps.length, (i) => Review.fromMap(maps[i]));
     }
+  }
+
+  Future<void> _saveUserToPrefs(User user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_id', user.id!);
+    await prefs.setString('username', user.username);
+    await prefs.setString('email', user.email);
   }
 }

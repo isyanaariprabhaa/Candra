@@ -192,8 +192,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: const Text('Cancel'),
                             ),
                             TextButton(
-                              onPressed: () {
-                                authProvider.logout();
+                              onPressed: () async {
+                                await authProvider.logout();
                                 Navigator.pop(context);
                                 Navigator.pushReplacementNamed(
                                     context, '/login');

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../providers/auth_providers.dart';
 import '../providers/kuliner_provider.dart';
 import '../widgets/kuliner_card.dart';
+import 'favorite_screen.dart';
+import 'kuliner_detail_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,6 +16,16 @@ class HomeScreen extends StatelessWidget {
         title: const Text('BaliKuliner'),
         automaticallyImplyLeading: false,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.favorite_border),
+            tooltip: 'Favorite',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoriteScreen()),
+              );
+            },
+          ),
           Consumer<AuthProvider>(
             builder: (context, auth, child) {
               return Padding(
@@ -206,7 +218,26 @@ class _HomeScreenBodyState extends State<_HomeScreenBody> {
                         itemCount: kulinerList.length,
                         itemBuilder: (context, index) {
                           final kuliner = kulinerList[index];
-                          return KulinerCard(kuliner: kuliner);
+                          return KulinerCard(
+                            kuliner: kuliner,
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: true,
+                                builder: (context) => Dialog(
+                                  insetPadding: const EdgeInsets.all(16),
+                                  child: SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width * 0.9,
+                                    height: MediaQuery.of(context).size.height *
+                                        0.85,
+                                    child:
+                                        KulinerDetailScreen(kuliner: kuliner),
+                                  ),
+                                ),
+                              );
+                            },
+                          );
                         },
                       ),
               ),

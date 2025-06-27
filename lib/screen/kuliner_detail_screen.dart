@@ -7,6 +7,9 @@ import '../providers/auth_providers.dart';
 import '../utils/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:io';
 
 class KulinerDetailScreen extends StatefulWidget {
   final Kuliner kuliner;
@@ -58,6 +61,7 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(),
+            _buildMapsSection(),
             _buildInfo(),
             _buildReviewSection(),
           ],
@@ -72,25 +76,110 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
   }
 
   Widget _buildHeader() {
+    final imageUrl = widget.kuliner.imageUrl;
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        height: 200,
+        width: double.infinity,
+        color: Colors.grey[300],
+        child: const Icon(
+          Icons.restaurant,
+          size: 80,
+          color: Colors.grey,
+        ),
+      );
+    }
+    Widget imageWidget;
+    if (imageUrl.startsWith('assets/')) {
+      imageWidget = Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 200,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading asset image: $imageUrl: ${error.toString()}');
+          return const Icon(Icons.restaurant, size: 80, color: Colors.grey);
+        },
+      );
+    } else if (imageUrl.startsWith('http')) {
+      imageWidget = Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 200,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading network image: $imageUrl: ${error.toString()}');
+          return const Icon(Icons.restaurant, size: 80, color: Colors.grey);
+        },
+      );
+    } else {
+      imageWidget = Image.file(
+        File(imageUrl),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: 200,
+        errorBuilder: (context, error, stackTrace) {
+          print('Error loading file image: $imageUrl: ${error.toString()}');
+          return const Icon(Icons.restaurant, size: 80, color: Colors.grey);
+        },
+      );
+    }
     return Container(
       height: 200,
       width: double.infinity,
+      color: Colors.grey[300],
+      child: imageWidget,
+    );
+  }
+
+  Widget _buildMapsSection() {
+    final lat = widget.kuliner.latitude;
+    final lng = widget.kuliner.longitude;
+    final LatLng position = LatLng(lat, lng);
+
+    if (kIsWeb) {
+      // Tampilkan pesan atau gambar statis jika di web
+      return Container(
+        height: 200,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green.shade100),
+          color: Colors.grey[200],
+        ),
+        child: Center(
+          child: Text('Peta hanya tersedia di aplikasi mobile.'),
+        ),
+      );
+    }
+
+    // Tampilkan GoogleMap jika di mobile
+    return Container(
+      height: 200,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.grey[300],
-        image: widget.kuliner.imageUrl != null
-            ? DecorationImage(
-                image: NetworkImage(widget.kuliner.imageUrl!),
-                fit: BoxFit.cover,
-              )
-            : null,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green.shade100),
       ),
-      child: widget.kuliner.imageUrl == null
-          ? const Icon(
-              Icons.restaurant,
-              size: 80,
-              color: Colors.grey,
-            )
-          : null,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: GoogleMap(
+          initialCameraPosition: CameraPosition(
+            target: position,
+            zoom: 15,
+          ),
+          markers: {
+            Marker(
+              markerId: const MarkerId('kuliner'),
+              position: position,
+              infoWindow: InfoWindow(title: widget.kuliner.name),
+            ),
+          },
+          zoomControlsEnabled: false,
+          myLocationButtonEnabled: false,
+          liteModeEnabled: true,
+        ),
+      ),
     );
   }
 

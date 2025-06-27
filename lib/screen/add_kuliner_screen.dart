@@ -57,265 +57,244 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add New Culinary Spot'),
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true,
       ),
+      backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the description';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                decoration: const InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
-                ),
-                items: _categories.map((category) {
-                  return DropdownMenuItem(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedCategory = value!;
-                    // Update image URL berdasarkan category jika tidak ada gambar yang dipilih
-                    if (_pickedImage == null) {
-                      _imageUrl =
-                          ImageService.getCategoryImageUrl(_selectedCategory);
-                    }
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _priceRangeController,
-                decoration: const InputDecoration(
-                  labelText: 'Price Range (e.g., Rp 20.000 - 50.000)',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the price range';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _addressController,
-                decoration: InputDecoration(
-                  labelText: 'Address',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: _isGettingLocation
-                      ? const Padding(
-                          padding: EdgeInsets.all(12),
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                        )
-                      : IconButton(
-                          icon: const Icon(Icons.my_location),
-                          onPressed: _getCurrentLocation,
-                        ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the address';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              _buildImagePicker(),
-              if (_imageError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Text(
-                    _imageError!,
-                    style: const TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitForm,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: _isLoading
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Add Culinary Spot'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePicker() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text('Photo', style: TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            GestureDetector(
-              onTap: _showImageSourceDialog,
-              child: _pickedImage != null
-                  ? Stack(
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.grey[400]!),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.file(
-                              File(_pickedImage!.path),
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 4,
-                          right: 4,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _pickedImage = null;
-                                _imageError = null;
-                                _imageUrl = ImageService.getCategoryImageUrl(
-                                    _selectedCategory);
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: const BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.close,
-                                color: Colors.white,
-                                size: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        border: Border.all(color: Colors.grey[400]!),
-                        borderRadius: BorderRadius.circular(8),
+            Column(
+              children: [
+                const Icon(Icons.restaurant_menu,
+                    size: 64, color: Colors.green),
+                const SizedBox(height: 8),
+                Text(
+                  'Tambah Kuliner Baru',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[800],
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_a_photo,
-                              size: 40, color: Colors.grey[700]),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Add Photo',
-                            style: TextStyle(
-                              color: Colors.grey[700],
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _pickedImage == null
-                        ? 'Using category image'
-                        : 'Image selected: ${_pickedImage!.name}',
-                    style: TextStyle(
-                      color: _pickedImage == null
-                          ? Colors.grey[600]
-                          : Colors.green[700],
-                      fontSize: 12,
-                    ),
+            Card(
+              elevation: 6,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildTextInput(_nameController, 'Nama Kuliner',
+                          labelBold: true),
+                      const SizedBox(height: 16),
+                      _buildTextInput(_descriptionController, 'Deskripsi',
+                          maxLines: 3, labelBold: true),
+                      const SizedBox(height: 16),
+                      _buildDropdown(),
+                      const SizedBox(height: 16),
+                      _buildTextInput(_priceRangeController,
+                          'Rentang Harga (misal: Rp 20.000 - 50.000)',
+                          labelBold: true),
+                      const SizedBox(height: 16),
+                      _buildAddressInput(),
+                      const SizedBox(height: 24),
+                      const Divider(height: 32),
+                      const Text('Foto',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      const SizedBox(height: 12),
+                      Center(child: _buildImagePicker(previewSize: 160)),
+                      if (_imageError != null) _buildImageError(),
+                      const SizedBox(height: 32),
+                      _buildSubmitButton(),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap to select image from gallery',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 11,
-                    ),
-                  ),
-                  if (_pickedImage == null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      'Or use category-based image',
-                      style: TextStyle(
-                        color: Colors.blue[600],
-                        fontSize: 11,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 
+  Widget _buildTextInput(TextEditingController controller, String label,
+      {int maxLines = 1, bool labelBold = false}) {
+    return TextFormField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle:
+            labelBold ? const TextStyle(fontWeight: FontWeight.bold) : null,
+        border: const OutlineInputBorder(),
+      ),
+      maxLines: maxLines,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Mohon isi $label' : null,
+    );
+  }
+
+  Widget _buildDropdown() {
+    return DropdownButtonFormField<String>(
+      value: _selectedCategory,
+      decoration: const InputDecoration(
+        labelText: 'Category',
+        border: OutlineInputBorder(),
+      ),
+      items: _categories
+          .map((category) =>
+              DropdownMenuItem(value: category, child: Text(category)))
+          .toList(),
+      onChanged: (value) {
+        setState(() {
+          _selectedCategory = value!;
+          if (_pickedImage == null) {
+            _imageUrl = ImageService.getCategoryImageUrl(_selectedCategory);
+          }
+        });
+      },
+    );
+  }
+
+  Widget _buildAddressInput() {
+    return TextFormField(
+      controller: _addressController,
+      decoration: InputDecoration(
+        labelText: 'Address',
+        border: const OutlineInputBorder(),
+        suffixIcon: _isGettingLocation
+            ? const Padding(
+                padding: EdgeInsets.all(12),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              )
+            : IconButton(
+                icon: const Icon(Icons.my_location),
+                onPressed: _getCurrentLocation,
+              ),
+      ),
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Please enter the address' : null,
+    );
+  }
+
+  Widget _buildImagePicker({double previewSize = 120}) {
+    return GestureDetector(
+      onTap: _showImageSourceDialog,
+      child: _pickedImage != null
+          ? Stack(
+              children: [
+                Container(
+                  width: previewSize,
+                  height: previewSize,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey[400]!),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.file(
+                      File(_pickedImage!.path),
+                      width: previewSize,
+                      height: previewSize,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _pickedImage = null;
+                        _imageError = null;
+                        _imageUrl =
+                            ImageService.getCategoryImageUrl(_selectedCategory);
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close,
+                          color: Colors.white, size: 18),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : Container(
+              width: previewSize,
+              height: previewSize,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.grey[400]!),
+              ),
+              child:
+                  const Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
+            ),
+    );
+  }
+
+  Widget _buildImageError() => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(
+          _imageError!,
+          style: const TextStyle(color: Colors.red, fontSize: 12),
+        ),
+      );
+
+  Widget _buildSubmitButton() => ElevatedButton(
+        onPressed: _isLoading ? null : _submitForm,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Add Culinary Spot'),
+        ),
+      );
+
   void _showImageSourceDialog() {
-    // Langsung pilih dari gallery tanpa dialog
-    _pickImage(ImageSource.gallery);
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Ambil dari Kamera'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Pilih dari Galeri'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -324,20 +303,26 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
         _imageError = null;
       });
 
-      // Request storage permission only (no camera needed)
-      bool storageGranted =
-          await PermissionHelper.requestStoragePermission(context);
-      if (!storageGranted) {
+      bool permissionGranted = false;
+      if (source == ImageSource.camera) {
+        permissionGranted =
+            await PermissionHelper.requestCameraPermission(context);
+      } else {
+        permissionGranted =
+            await PermissionHelper.requestStoragePermission(context);
+      }
+      if (!permissionGranted) {
         setState(() {
-          _imageError =
-              'Storage permission is required to select images from gallery.';
+          _imageError = source == ImageSource.camera
+              ? 'Camera permission is required.'
+              : 'Storage permission is required to select images from gallery.';
         });
         return;
       }
 
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery, // Always use gallery
+        source: source,
         maxWidth: 1024,
         maxHeight: 1024,
         imageQuality: 85,
@@ -348,7 +333,6 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
           _pickedImage = image;
         });
 
-        // Validate file size
         final file = File(image.path);
         final fileSize = await file.length();
         final maxSize = 5 * 1024 * 1024; // 5MB
@@ -363,9 +347,8 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
       }
     } catch (e) {
       setState(() {
-        _imageError = 'Failed to pick image: ${e.toString()}';
+        _imageError = 'Failed to pick image: ${e.toString()}';
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error picking image: ${e.toString()}'),
@@ -454,18 +437,20 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
             Provider.of<AuthProvider>(context, listen: false).currentUser;
 
         // Handle image URL menggunakan ImageService
-        String imageUrl;
+        String imageUrl = '';
         if (_pickedImage != null) {
-          // Ada gambar yang dipilih, gunakan ImageService
           File imageFile = File(_pickedImage!.path);
           imageUrl = await ImageService.getImageUrl(
               imageFile, _selectedCategory, _nameController.text);
-        } else {
-          // Tidak ada gambar, gunakan category-based image
+        }
+        // Jika imageUrl masih kosong/null, fallback ke default
+        if (imageUrl.isEmpty || imageUrl == 'null') {
           imageUrl = ImageService.getCategoryImageUrl(_selectedCategory);
         }
+        print('Image URL yang disimpan: ' + imageUrl);
 
         final kuliner = Kuliner(
+          id: 0,
           name: _nameController.text,
           description: _descriptionController.text,
           category: _selectedCategory,

@@ -1,5 +1,5 @@
 class Kuliner {
-  final int? id;
+  final int id;
   final String name;
   final String description;
   final String category;
@@ -13,7 +13,7 @@ class Kuliner {
   final DateTime createdAt;
 
   Kuliner({
-    this.id,
+    required this.id,
     required this.name,
     required this.description,
     required this.category,
@@ -58,8 +58,7 @@ class Kuliner {
   }
 
   Map<String, dynamic> toMap() {
-    return {
-      'id': id,
+    final map = {
       'name': name,
       'description': description,
       'category': category,
@@ -72,6 +71,10 @@ class Kuliner {
       'user_id': userId,
       'created_at': createdAt.toIso8601String(),
     };
+    if (id != 0) {
+      map['id'] = id;
+    }
+    return map;
   }
 
   factory Kuliner.fromMap(Map<String, dynamic> map) {

@@ -16,20 +16,21 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isLoggedIn => _currentUser != null;
 
-  void _loadUserFromPrefs() {
+  void _loadUserFromPrefs() async {
     final userId = _prefs.getInt('user_id');
-    final username = _prefs.getString('username');
     final email = _prefs.getString('email');
-
-    if (userId != null && username != null && email != null) {
-      _currentUser = User(
-        id: userId,
-        username: username,
-        email: email,
-        password: '',
-        createdAt: DateTime.now(),
-      );
+    if (userId != null && email != null) {
+      // Ambil user lengkap dari database
+      final user = await DatabaseHelper.instance.getUserById(userId);
+      if (user != null) {
+        _currentUser = user;
+      } else {
+        _currentUser = null;
+      }
+    } else {
+      _currentUser = null;
     }
+    notifyListeners();
   }
 
   // CREATE - Register new user
@@ -153,7 +154,9 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> logout() async {
     _currentUser = null;
-    await _prefs.clear();
+    await _prefs.remove('user_id');
+    await _prefs.remove('username');
+    await _prefs.remove('email');
     notifyListeners();
   }
 

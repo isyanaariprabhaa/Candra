@@ -4,7 +4,6 @@ import '../providers/auth_providers.dart';
 import '../providers/kuliner_provider.dart';
 import '../utils/app_theme.dart';
 import 'home_screen.dart';
-import 'search_screen.dart';
 import 'add_kuliner_screen.dart';
 import 'profile_screen.dart';
 
@@ -20,7 +19,6 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _screens = [
     const HomeScreen(),
-    const SearchScreen(),
     const AddKulinerScreen(),
     const ProfileScreen(),
   ];
@@ -52,7 +50,7 @@ class _MainScreenState extends State<MainScreen> {
           type: BottomNavigationBarType.fixed,
           currentIndex: _selectedIndex,
           selectedItemColor:
-              _selectedIndex == 1 ? Colors.green[600] : Colors.orange[600],
+              _selectedIndex == 0 ? Colors.orange[600] : Colors.green[600],
           unselectedItemColor: Colors.grey[600],
           backgroundColor: Colors.white,
           elevation: 0,
@@ -81,18 +79,6 @@ class _MainScreenState extends State<MainScreen> {
                 color: Colors.orange[600],
               ),
               label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.search_rounded,
-                size: 24,
-              ),
-              activeIcon: Icon(
-                Icons.search_rounded,
-                size: 24,
-                color: Colors.green[600],
-              ),
-              label: 'Search',
             ),
             BottomNavigationBarItem(
               icon: Icon(
