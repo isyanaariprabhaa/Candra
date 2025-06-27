@@ -75,93 +75,113 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Search'),
         backgroundColor: Colors.green[600],
         foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.grey[50],
+            padding: const EdgeInsets.all(18),
+            color: Colors.transparent,
             child: Column(
               children: [
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Cari makanan atau restoran...',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    suffixIcon: _searchController.text.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear_rounded),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() {
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
+                Material(
+                  elevation: 2,
+                  borderRadius: BorderRadius.circular(18),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Cari makanan atau restoran...',
+                      prefixIcon: const Icon(Icons.search_rounded,
+                          color: Color(0xFF43E97B)),
+                      suffixIcon: _searchController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear_rounded),
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                            )
+                          : null,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(18),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18,
+                        vertical: 16,
+                      ),
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        _searchQuery = value;
+                      });
+                    },
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      _searchQuery = value;
-                    });
-                  },
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 Consumer<KulinerProvider>(
                   builder: (context, kulinerProvider, child) {
                     final categories =
                         _getCategories(kulinerProvider.kulinerList);
                     return SizedBox(
-                      height: 40,
+                      height: 44,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: categories.length,
                         separatorBuilder: (context, i) =>
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 10),
                         itemBuilder: (context, i) {
                           final cat = categories[i];
                           final selected = cat == _selectedCategory;
-                          return ChoiceChip(
-                            label: Text(cat),
-                            selected: selected,
-                            onSelected: (val) {
-                              setState(() {
-                                _selectedCategory = selected ? null : cat;
-                              });
-                            },
-                            selectedColor: Colors.green[600],
-                            labelStyle: TextStyle(
-                              color:
-                                  selected ? Colors.white : Colors.green[800],
-                              fontWeight: FontWeight.bold,
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            curve: Curves.easeInOut,
+                            child: ChoiceChip(
+                              label: Text(cat),
+                              selected: selected,
+                              onSelected: (val) {
+                                setState(() {
+                                  _selectedCategory = selected ? null : cat;
+                                });
+                              },
+                              selectedColor: const Color(0xFF43E97B),
+                              labelStyle: TextStyle(
+                                color:
+                                    selected ? Colors.white : Colors.green[800],
+                                fontWeight: FontWeight.bold,
+                              ),
+                              backgroundColor: Colors.green[50],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: selected ? 4 : 0,
                             ),
-                            backgroundColor: Colors.green[50],
                           );
                         },
                       ),
                     );
                   },
                 ),
+                const SizedBox(height: 8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const Text('Terdekat'),
+                    const Text('Terdekat',
+                        style: TextStyle(fontWeight: FontWeight.w500)),
                     Switch(
                       value: _showNearest,
+                      activeColor: const Color(0xFF43E97B),
                       onChanged: (val) {
                         setState(() {
                           _showNearest = val;
@@ -182,9 +202,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 if (kulinerProvider.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 final allKuliner = kulinerProvider.kulinerList;
-
                 List filteredKuliner = allKuliner;
                 if (_selectedCategory != null) {
                   filteredKuliner = filteredKuliner
@@ -207,29 +225,24 @@ class _SearchScreenState extends State<SearchScreen> {
                       _distanceToUser(a.latitude, a.longitude)
                           .compareTo(_distanceToUser(b.latitude, b.longitude)));
                 }
-
                 if (filteredKuliner.isEmpty) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.search_off,
-                            size: 64, color: Colors.grey[600]),
-                        const SizedBox(height: 16),
+                      children: const [
+                        Icon(Icons.search_off, size: 80, color: Colors.grey),
+                        SizedBox(height: 20),
                         Text(
                           'Tidak ada kuliner yang ditemukan',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                          ),
+                          style: TextStyle(fontSize: 20, color: Colors.grey),
                         ),
                       ],
                     ),
                   );
                 }
-
                 return ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
                   itemCount: filteredKuliner.length,
                   itemBuilder: (context, index) {
                     final kuliner = filteredKuliner[index];
@@ -239,29 +252,45 @@ class _SearchScreenState extends State<SearchScreen> {
                           _distanceToUser(kuliner.latitude, kuliner.longitude);
                     }
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      elevation: 4,
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.grey[300],
+                          backgroundColor: Colors.green[50],
                           child:
-                              Icon(Icons.restaurant, color: Colors.grey[600]),
+                              Icon(Icons.restaurant, color: Colors.green[400]),
                         ),
-                        title: Text(kuliner.name),
+                        title: Text(kuliner.name,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(kuliner.category),
                             if (distance != null && distance < double.infinity)
-                              Text('Jarak: ${distance ~/ 1} m',
-                                  style: const TextStyle(
-                                      fontSize: 12, color: Colors.blueGrey)),
+                              Container(
+                                margin: const EdgeInsets.only(top: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[50],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text('Jarak: ${distance ~/ 1} m',
+                                    style: const TextStyle(
+                                        fontSize: 12, color: Colors.blueGrey)),
+                              ),
                           ],
                         ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.star, color: Colors.amber, size: 16),
-                            Text(kuliner.rating.toStringAsFixed(1)),
+                            Icon(Icons.star, color: Colors.amber, size: 18),
+                            Text(kuliner.rating.toStringAsFixed(1),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
                           ],
                         ),
                         onTap: () {

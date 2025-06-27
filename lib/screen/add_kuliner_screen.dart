@@ -59,8 +59,11 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
       appBar: AppBar(
         title: const Text('Add New Culinary Spot'),
         automaticallyImplyLeading: true,
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

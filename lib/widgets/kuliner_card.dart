@@ -51,8 +51,6 @@ class KulinerCard extends StatelessWidget {
                                 kuliner.imageUrl!,
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
-                                  print(
-                                      'Error loading network image: \\${kuliner.imageUrl}: \\${error.toString()}');
                                   return const Icon(
                                     Icons.restaurant,
                                     size: 80,
@@ -65,8 +63,6 @@ class KulinerCard extends StatelessWidget {
                                     kuliner.imageUrl!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      print(
-                                          'Error loading asset image: \\${kuliner.imageUrl}: \\${error.toString()}');
                                       return const Icon(
                                         Icons.restaurant,
                                         size: 80,
@@ -78,8 +74,6 @@ class KulinerCard extends StatelessWidget {
                                     File(kuliner.imageUrl!),
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
-                                      print(
-                                          'Error loading file image: \\${kuliner.imageUrl}: \\${error.toString()}');
                                       return const Icon(
                                         Icons.restaurant,
                                         size: 80,
@@ -197,7 +191,6 @@ class KulinerCard extends StatelessWidget {
                               onTap: () async {
                                 final url =
                                     'https://www.google.com/maps/search/?api=1&query=${kuliner.latitude},${kuliner.longitude}';
-                                // ignore: deprecated_member_use
                                 if (await canLaunch(url)) {
                                   await launch(url);
                                 }

@@ -25,6 +25,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
+  // Tambahan untuk visibility password
+  bool _loginPasswordVisible = false;
+  bool _registerPasswordVisible = false;
+
   @override
   void dispose() {
     _loginEmailController.dispose();
@@ -259,11 +263,43 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 16),
         TextField(
           controller: _loginPasswordController,
-          obscureText: true,
-          decoration: const InputDecoration(
+          obscureText: !_loginPasswordVisible,
+          decoration: InputDecoration(
             labelText: 'Password',
-            prefixIcon: Icon(Icons.lock_rounded),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.lock_rounded),
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _loginPasswordVisible ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () {
+                setState(() {
+                  _loginPasswordVisible = !_loginPasswordVisible;
+                });
+              },
+            ),
+          ),
+        ),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Lupa Password'),
+                  content: const Text(
+                      'Silakan hubungi admin atau email support@balikuliner.com untuk reset password.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Tutup'),
+                    ),
+                  ],
+                ),
+              );
+            },
+            child: const Text('Lupa Password?'),
           ),
         ),
       ],
@@ -294,11 +330,23 @@ class _LoginScreenState extends State<LoginScreen> {
         const SizedBox(height: 16),
         TextField(
           controller: _registerPasswordController,
-          obscureText: true,
-          decoration: const InputDecoration(
+          obscureText: !_registerPasswordVisible,
+          decoration: InputDecoration(
             labelText: 'Password',
-            prefixIcon: Icon(Icons.lock_rounded),
-            border: OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.lock_rounded),
+            border: const OutlineInputBorder(),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _registerPasswordVisible
+                    ? Icons.visibility
+                    : Icons.visibility_off,
+              ),
+              onPressed: () {
+                setState(() {
+                  _registerPasswordVisible = !_registerPasswordVisible;
+                });
+              },
+            ),
           ),
         ),
       ],

@@ -27,11 +27,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: Colors.green,
         foregroundColor: Colors.white,
+        elevation: 0,
+        automaticallyImplyLeading: false,
       ),
       body: Consumer<AuthProvider>(
         builder: (context, authProvider, child) {
@@ -47,138 +51,160 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _usernameController = TextEditingController(text: user.username);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Profile header
+                // Hanya avatar saja di tengah atas, tanpa username dan email
+                const SizedBox(height: 56),
                 Center(
-                  child: Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          _showEditProfileDialog(context, authProvider, user);
-                        },
-                        child: CircleAvatar(
-                          radius: 50,
-                          backgroundColor: AppTheme.primaryColor,
-                          child: _avatarUrl != null && _avatarUrl!.isNotEmpty
-                              ? (_avatarUrl!.startsWith('http')
-                                  ? ClipOval(
-                                      child: Image.network(
-                                        _avatarUrl!,
-                                        width: 100,
-                                        height: 100,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.person,
-                                            size: 50,
-                                            color: Colors.white,
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : ClipOval(
-                                      child: Image.file(
-                                        File(_avatarUrl!),
-                                        width: 100,
-                                        height: 100,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                          return const Icon(
-                                            Icons.person,
-                                            size: 50,
-                                            color: Colors.white,
-                                          );
-                                        },
-                                      ),
-                                    ))
-                              : const Icon(
-                                  Icons.person,
-                                  size: 50,
-                                  color: Colors.white,
-                                ),
-                        ),
+                  child: GestureDetector(
+                    onTap: () {
+                      _showEditProfileDialog(context, authProvider, user);
+                    },
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: theme.colorScheme.onBackground, width: 4),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        user.username,
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      child: CircleAvatar(
+                        radius: 70,
+                        backgroundColor: theme.colorScheme.surfaceVariant,
+                        child: _avatarUrl != null && _avatarUrl!.isNotEmpty
+                            ? (_avatarUrl!.startsWith('http')
+                                ? ClipOval(
+                                    child: Image.network(
+                                      _avatarUrl!,
+                                      width: 140,
+                                      height: 140,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Icon(
+                                          Icons.person,
+                                          size: 80,
+                                          color: Colors.grey,
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : ClipOval(
+                                    child: Image.file(
+                                      File(_avatarUrl!),
+                                      width: 140,
+                                      height: 140,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Icon(
+                                          Icons.person,
+                                          size: 80,
+                                          color: Colors.grey,
+                                        );
+                                      },
+                                    ),
+                                  ))
+                            : const Icon(
+                                Icons.person,
+                                size: 80,
+                                color: Colors.grey,
+                              ),
                       ),
-                      Text(
-                        user.email,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-
-                const SizedBox(height: 32),
-
-                // Profile sections
-                _buildProfileSection(
-                  title: 'Account Information',
-                  children: [
-                    _buildProfileItem(
-                      icon: Icons.person,
-                      title: 'Username',
-                      value: user.username,
+                // Account Info Card
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  child: Card(
+                    elevation: 4,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24)),
+                    color: Colors.white,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 18, horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Informasi Akun',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 16)),
+                          const SizedBox(height: 16),
+                          _buildProfileItem(
+                              icon: Icons.person,
+                              title: 'Username',
+                              value: user.username),
+                          const Divider(),
+                          _buildProfileItem(
+                              icon: Icons.email,
+                              title: 'Email',
+                              value: user.email),
+                          const Divider(),
+                          _buildProfileItem(
+                              icon: Icons.calendar_today,
+                              title: 'Member Sejak',
+                              value: _formatDate(user.createdAt)),
+                        ],
+                      ),
                     ),
-                    _buildProfileItem(
-                      icon: Icons.email,
-                      title: 'Email',
-                      value: user.email,
-                    ),
-                    _buildProfileItem(
-                      icon: Icons.calendar_today,
-                      title: 'Member Since',
-                      value: _formatDate(user.createdAt),
-                    ),
-                  ],
+                  ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Actions section
-                _buildProfileSection(
-                  title: 'Actions',
-                  children: [
-                    ListTile(
-                      leading:
-                          const Icon(Icons.edit, color: AppTheme.primaryColor),
-                      title: const Text('Edit Profile'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        _showEditProfileDialog(context, authProvider, user);
-                      },
+                // Actions Card
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24)),
+                    color: Colors.white,
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading:
+                              const Icon(Icons.edit, color: Color(0xFF43E97B)),
+                          title: const Text('Edit Profile'),
+                          trailing:
+                              const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () {
+                            _showEditProfileDialog(context, authProvider, user);
+                          },
+                        ),
+                        const Divider(height: 0),
+                        ListTile(
+                          leading:
+                              const Icon(Icons.lock, color: Color(0xFF43E97B)),
+                          title: const Text('Ganti Password'),
+                          trailing:
+                              const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () {
+                            _showChangePasswordDialog(
+                                context, authProvider, user);
+                          },
+                        ),
+                        const Divider(height: 0),
+                        ListTile(
+                          leading: const Icon(Icons.settings,
+                              color: Color(0xFF43E97B)),
+                          title: const Text('Settings'),
+                          trailing:
+                              const Icon(Icons.arrow_forward_ios, size: 16),
+                          onTap: () {
+                            _showThemeDialog(context);
+                          },
+                        ),
+                      ],
                     ),
-                    ListTile(
-                      leading: const Icon(Icons.settings,
-                          color: AppTheme.primaryColor),
-                      title: const Text('Settings'),
-                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                      onTap: () {
-                        _showThemeDialog(context);
-                      },
-                    ),
-                  ],
+                  ),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Logout button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                // Logout Button
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+                  child: ElevatedButton.icon(
                     onPressed: () {
                       showDialog(
                         context: context,
@@ -198,23 +224,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Navigator.pushReplacementNamed(
                                     context, '/login');
                               },
-                              child: const Text('Logout'),
+                              child: const Text('Logout',
+                                  style: TextStyle(color: Colors.red)),
                             ),
                           ],
                         ),
                       );
                     },
+                    icon: const Icon(Icons.logout, color: Colors.white),
+                    label: const Text('Logout',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor: Colors.red[400],
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Logout',
-                      style: TextStyle(fontSize: 16),
+                          borderRadius: BorderRadius.circular(24)),
+                      elevation: 3,
                     ),
                   ),
                 ),
@@ -223,30 +250,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           );
         },
       ),
-    );
-  }
-
-  Widget _buildProfileSection({
-    required String title,
-    required List<Widget> children,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Card(
-          child: Column(
-            children: children,
-          ),
-        ),
-      ],
     );
   }
 
@@ -424,6 +427,168 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+
+  void _showChangePasswordDialog(
+      BuildContext context, AuthProvider authProvider, user) {
+    final oldPasswordController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    bool oldPasswordVisible = false;
+    bool newPasswordVisible = false;
+    bool confirmPasswordVisible = false;
+    bool isLoading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Ganti Password'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: oldPasswordController,
+                      obscureText: !oldPasswordVisible,
+                      decoration: InputDecoration(
+                        labelText: 'Password Lama',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            oldPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              oldPasswordVisible = !oldPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: newPasswordController,
+                      obscureText: !newPasswordVisible,
+                      decoration: InputDecoration(
+                        labelText: 'Password Baru',
+                        prefixIcon: const Icon(Icons.lock),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            newPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              newPasswordVisible = !newPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: !confirmPasswordVisible,
+                      decoration: InputDecoration(
+                        labelText: 'Konfirmasi Password Baru',
+                        prefixIcon: const Icon(Icons.lock),
+                        border: const OutlineInputBorder(),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            confirmPasswordVisible
+                                ? Icons.visibility
+                                : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              confirmPasswordVisible = !confirmPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Batal'),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          setState(() => isLoading = true);
+                          final oldPass = oldPasswordController.text.trim();
+                          final newPass = newPasswordController.text.trim();
+                          final confirmPass =
+                              confirmPasswordController.text.trim();
+                          if (newPass != confirmPass) {
+                            setState(() => isLoading = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content:
+                                    Text('Konfirmasi password tidak cocok!'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          // Validasi password lama secara manual
+                          if (user.password != oldPass) {
+                            setState(() => isLoading = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Password lama salah!'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
+                          final result =
+                              await authProvider.changePassword(newPass);
+                          setState(() => isLoading = false);
+                          if (result) {
+                            Navigator.pop(context);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Password berhasil diganti!'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Gagal mengganti password!'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Text('Simpan'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
