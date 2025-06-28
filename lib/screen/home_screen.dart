@@ -57,6 +57,22 @@ class _HomeScreenBody extends StatefulWidget {
 
 class _HomeScreenBodyState extends State<_HomeScreenBody> {
   @override
+  void initState() {
+    super.initState();
+    // Load kuliner data when screen is initialized
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<KulinerProvider>(context, listen: false).loadKuliner();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Reload kuliner data when dependencies change
+    Provider.of<KulinerProvider>(context, listen: false).loadKuliner();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: () async {

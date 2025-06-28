@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/kuliner_provider.dart';
+import '../widgets/kuliner_card.dart';
+import '../models/kuliner.dart';
 import 'kuliner_detail_screen.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:convert';
+import 'dart:io';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -52,6 +56,115 @@ class _SearchScreenState extends State<SearchScreen> {
       lat,
       lng,
     );
+  }
+
+  Widget _buildKulinerImage(Kuliner kuliner) {
+    final imageUrl = kuliner.imageUrl ?? '';
+    if (imageUrl.isNotEmpty) {
+      if (imageUrl.startsWith('data:image') || imageUrl.startsWith('/')) {
+        // Base64 image
+        try {
+          return Image.memory(
+            base64Decode(imageUrl.replaceFirst(RegExp(r'data:image/[^;]+;base64,'), '')),
+            fit: BoxFit.cover,
+            width: 60,
+            height: 60,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                width: 60,
+                height: 60,
+                color: Colors.grey[300],
+                child: Icon(
+                  Icons.restaurant,
+                  color: Colors.grey[600],
+                  size: 24,
+                ),
+              );
+            },
+          );
+        } catch (e) {
+          return Container(
+            width: 60,
+            height: 60,
+            color: Colors.grey[300],
+            child: Icon(
+              Icons.restaurant,
+              color: Colors.grey[600],
+              size: 24,
+            ),
+          );
+        }
+      } else if (imageUrl.startsWith('http')) {
+        // Network image (URL internet)
+        return Image.network(
+          imageUrl,
+          fit: BoxFit.cover,
+          width: 60,
+          height: 60,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              width: 60,
+              height: 60,
+              color: Colors.grey[300],
+              child: Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                      : null,
+                  strokeWidth: 2,
+                ),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            print('Error loading image: $error');
+            return Container(
+              width: 60,
+              height: 60,
+              color: Colors.grey[300],
+              child: Icon(
+                Icons.restaurant,
+                color: Colors.grey[600],
+                size: 24,
+              ),
+            );
+          },
+        );
+      } else {
+        // File image
+        return Image.file(
+          File(imageUrl),
+          fit: BoxFit.cover,
+          width: 60,
+          height: 60,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: 60,
+              height: 60,
+              color: Colors.grey[300],
+              child: Icon(
+                Icons.restaurant,
+                color: Colors.grey[600],
+                size: 24,
+              ),
+            );
+          },
+        );
+      }
+    } else {
+      // Default icon
+      return Container(
+        width: 60,
+        height: 60,
+        color: Colors.grey[300],
+        child: Icon(
+          Icons.restaurant,
+          color: Colors.grey[600],
+          size: 24,
+        ),
+      );
+    }
   }
 
   @override
@@ -248,51 +361,14 @@ class _SearchScreenState extends State<SearchScreen> {
                     final kuliner = filteredKuliner[index];
                     double? distance;
                     if (_showNearest && _userPosition != null) {
-                      distance =
-                          _distanceToUser(kuliner.latitude, kuliner.longitude);
+                      distance = _distanceToUser(kuliner.latitude, kuliner.longitude);
                     }
                     return Card(
                       margin: const EdgeInsets.only(bottom: 16),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20)),
                       elevation: 4,
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.green[50],
-                          child:
-                              Icon(Icons.restaurant, color: Colors.green[400]),
-                        ),
-                        title: Text(kuliner.name,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(kuliner.category),
-                            if (distance != null && distance < double.infinity)
-                              Container(
-                                margin: const EdgeInsets.only(top: 2),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.green[50],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text('Jarak: ${distance ~/ 1} m',
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.blueGrey)),
-                              ),
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.star, color: Colors.amber, size: 18),
-                            Text(kuliner.rating.toStringAsFixed(1),
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold)),
-                          ],
-                        ),
+                      child: InkWell(
                         onTap: () {
                           Navigator.push(
                             context,
@@ -302,6 +378,137 @@ class _SearchScreenState extends State<SearchScreen> {
                             ),
                           );
                         },
+                        borderRadius: BorderRadius.circular(20),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              // Leading image/icon
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: _buildKulinerImage(kuliner),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              // Content
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      kuliner.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green[100],
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        kuliner.category,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.green[700],
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.location_on,
+                                          size: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            kuliner.address,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if (distance != null && distance < double.infinity)
+                                      Container(
+                                        margin: const EdgeInsets.only(top: 4),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue[50],
+                                          borderRadius: BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          'Jarak: ${distance ~/ 1} m',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.blue[700],
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              // Rating
+                              Column(
+                                children: [
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.amber,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        kuliner.rating.toStringAsFixed(1),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    kuliner.priceRange,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     );
                   },

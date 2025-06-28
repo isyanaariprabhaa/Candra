@@ -38,10 +38,10 @@ class DatabaseHelper {
 
     String path = join(await sqflite.getDatabasesPath(), 'balikuliner.db');
 
-    // Delete existing database to force recreation with new schema
+    // Hapus kode penghapusan database agar data tetap tersimpan
     // try {
     //   await sqflite.deleteDatabase(path);
-    //   print('Deleted existing database to recreate with new schema');
+    //   print('Deleted existing database to remove dummy data');
     // } catch (e) {
     //   print('Error deleting database: $e');
     // }
@@ -67,7 +67,8 @@ class DatabaseHelper {
     _userStore = sembast.stringMapStoreFactory.store('users');
     _kulinerStore = sembast.stringMapStoreFactory.store('kuliners');
     _reviewStore = sembast.stringMapStoreFactory.store('reviews');
-    // Tambahkan user default jika belum ada
+    
+    // Tambahkan user default candra jika belum ada
     final db = _sembastDatabase!;
     final finderCandra = sembast.Finder(
         filter: sembast.Filter.equals('email', 'candra@balikuliner.com'));
@@ -81,7 +82,99 @@ class DatabaseHelper {
         'created_at': DateTime.now().toIso8601String(),
       });
     }
+    
+    // Inisialisasi data dummy untuk Sembast
+    await _initializeSembastDummyData(db);
+    
     return _sembastDatabase!;
+  }
+
+  Future<void> _initializeSembastDummyData(sembast.Database db) async {
+    // Cek apakah data dummy sudah ada
+    final existingKuliner = await _kulinerStore!.find(db);
+    if (existingKuliner.isNotEmpty) {
+      print('Sembast dummy data already exists, skipping...');
+      return;
+    }
+
+    // Cari user candra
+    final finderCandra = sembast.Finder(
+        filter: sembast.Filter.equals('email', 'candra@balikuliner.com'));
+    final recordsCandra = await _userStore!.find(db, finder: finderCandra);
+    if (recordsCandra.isEmpty) {
+      print('User candra not found in Sembast');
+      return;
+    }
+    
+    final userId = recordsCandra.first.key;
+
+    // Tambahkan data dummy untuk Sembast
+    await _kulinerStore!.add(db, {
+      'name': 'Ayam Betutu Bali',
+      'description': 'Ayam betutu khas Bali dengan bumbu rempah tradisional',
+      'category': 'Makanan Utama',
+      'price_range': 'Rp 50.000 - 75.000',
+      'address': 'Jl. Raya Ubud, Bali',
+      'latitude': -8.5069,
+      'longitude': 115.2625,
+      'image_url': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.5,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await _kulinerStore!.add(db, {
+      'name': 'Es Daluman',
+      'description': 'Minuman segar khas Bali dengan cincau hijau dan santan',
+      'category': 'Minuman',
+      'price_range': 'Rp 10.000 - 15.000',
+      'address': 'Jl. Teuku Umar, Denpasar',
+      'latitude': -8.6705,
+      'longitude': 115.2126,
+      'image_url': 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.2,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await _kulinerStore!.add(db, {
+      'name': 'Pie Susu Bali',
+      'description': 'Cemilan manis khas Bali dengan isian susu lembut',
+      'category': 'Cemilan',
+      'price_range': 'Rp 2.000 - 5.000',
+      'address': 'Jl. By Pass Ngurah Rai, Bali',
+      'latitude': -8.7482,
+      'longitude': 115.1675,
+      'image_url': 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.6,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await _kulinerStore!.add(db, {
+      'name': 'Dadar Gulung',
+      'description': 'Dessert tradisional berisi kelapa parut dan gula merah',
+      'category': 'Dessert',
+      'price_range': 'Rp 3.000 - 7.000',
+      'address': 'Jl. Diponegoro, Denpasar',
+      'latitude': -8.6556,
+      'longitude': 115.2167,
+      'image_url': 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.3,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await _kulinerStore!.add(db, {
+      'name': 'Klepon Bali',
+      'description': 'Kue tradisional berisi gula merah dan kelapa parut',
+      'category': 'Kue',
+      'price_range': 'Rp 2.000 - 4.000',
+      'address': 'Jl. Gatot Subroto, Denpasar',
+      'latitude': -8.6386,
+      'longitude': 115.2167,
+      'image_url': 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.4,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    print('Added Sembast dummy data for all categories');
   }
 
   Future<void> _onCreate(sqflite.Database db, int version) async {
@@ -125,24 +218,94 @@ class DatabaseHelper {
         rating INTEGER NOT NULL,
         comment TEXT,
         created_at TEXT NOT NULL,
+        username TEXT,
+        latitude REAL,
+        longitude REAL,
         FOREIGN KEY (kuliner_id) REFERENCES kuliners (id),
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
     ''');
 
-    // Insert sample data
-    await _insertSampleData(db);
-
     // Tambahkan user default candra
-    await db.insert('users', {
+    final userId = await db.insert('users', {
       'username': 'candra',
       'email': 'candra@balikuliner.com',
       'password': 'admin123',
       'avatar': null,
       'created_at': DateTime.now().toIso8601String(),
     });
+
+    // Data dummy 1 per kategori
+    await db.insert('kuliners', {
+      'name': 'Ayam Betutu Bali',
+      'description': 'Ayam betutu khas Bali dengan bumbu rempah tradisional',
+      'category': 'Makanan Utama',
+      'price_range': 'Rp 50.000 - 75.000',
+      'address': 'Jl. Raya Ubud, Bali',
+      'latitude': -8.5069,
+      'longitude': 115.2625,
+      'image_url': 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.5,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await db.insert('kuliners', {
+      'name': 'Es Daluman',
+      'description': 'Minuman segar khas Bali dengan cincau hijau dan santan',
+      'category': 'Minuman',
+      'price_range': 'Rp 10.000 - 15.000',
+      'address': 'Jl. Teuku Umar, Denpasar',
+      'latitude': -8.6705,
+      'longitude': 115.2126,
+      'image_url': 'https://images.unsplash.com/photo-1556679343-c7306c1976bc?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.2,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await db.insert('kuliners', {
+      'name': 'Pie Susu Bali',
+      'description': 'Cemilan manis khas Bali dengan isian susu lembut',
+      'category': 'Cemilan',
+      'price_range': 'Rp 2.000 - 5.000',
+      'address': 'Jl. By Pass Ngurah Rai, Bali',
+      'latitude': -8.7482,
+      'longitude': 115.1675,
+      'image_url': 'https://images.unsplash.com/photo-1502741338009-cac2772e18bc?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.6,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await db.insert('kuliners', {
+      'name': 'Dadar Gulung',
+      'description': 'Dessert tradisional berisi kelapa parut dan gula merah',
+      'category': 'Dessert',
+      'price_range': 'Rp 3.000 - 7.000',
+      'address': 'Jl. Diponegoro, Denpasar',
+      'latitude': -8.6556,
+      'longitude': 115.2167,
+      'image_url': 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.3,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await db.insert('kuliners', {
+      'name': 'Klepon Bali',
+      'description': 'Kue tradisional berisi gula merah dan kelapa parut',
+      'category': 'Kue',
+      'price_range': 'Rp 2.000 - 4.000',
+      'address': 'Jl. Gatot Subroto, Denpasar',
+      'latitude': -8.6386,
+      'longitude': 115.2167,
+      'image_url': 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.4,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    print('Added dummy data for all categories');
   }
 
+  // Method untuk insert sample data - DICOMMENT UNTUK MENGHILANGKAN DATA DUMMY
+  /*
   Future<void> _insertSampleData(sqflite.Database db) async {
     // Insert sample user
     await db.insert('users', {
@@ -292,9 +455,12 @@ class DatabaseHelper {
         'comment': 'Enak banget! Wajib coba.',
         'created_at': DateTime.now().toIso8601String(),
         'username': 'admin',
+        'latitude': kuliner['latitude'],
+        'longitude': kuliner['longitude'],
       });
     }
   }
+  */
 
   // User CRUD operations
   Future<int> insertUser(User user) async {
@@ -441,16 +607,31 @@ class DatabaseHelper {
   }
 
   Future<int> _insertReviewSqlite(Review review) async {
-    final db = await database as sqflite.Database;
-    return await db.insert('reviews', review.toMap());
+    try {
+      final db = await database as sqflite.Database;
+      print('Inserting review to SQLite: ${review.toMap()}');
+      final result = await db.insert('reviews', review.toMap());
+      print('SQLite review insert result: $result');
+      return result;
+    } catch (e) {
+      print('SQLite review insert error: $e');
+      rethrow;
+    }
   }
 
   Future<int> _insertReviewSembast(Review review) async {
-    final db = await database as sembast.Database;
-    final id = DateTime.now().millisecondsSinceEpoch;
-    final reviewWithId = review.copyWith(id: id);
-    await _reviewStore!.add(db, reviewWithId.toMap());
-    return id;
+    try {
+      final db = await database as sembast.Database;
+      final id = DateTime.now().millisecondsSinceEpoch;
+      final reviewWithId = review.copyWith(id: id);
+      print('Inserting review to Sembast: ${reviewWithId.toMap()}');
+      await _reviewStore!.add(db, reviewWithId.toMap());
+      print('Sembast review insert result: $id');
+      return id;
+    } catch (e) {
+      print('Sembast review insert error: $e');
+      rethrow;
+    }
   }
 
   Future<List<Review>> getReviewsForKuliner(int kulinerId) async {
@@ -462,38 +643,60 @@ class DatabaseHelper {
   }
 
   Future<List<Review>> _getReviewsForKulinerSqlite(int kulinerId) async {
-    final db = await database as sqflite.Database;
-    final List<Map<String, dynamic>> maps = await db.query(
-      'reviews',
-      where: 'kuliner_id = ?',
-      whereArgs: [kulinerId],
-    );
-    return List.generate(maps.length, (i) => Review.fromMap(maps[i]));
+    try {
+      final db = await database as sqflite.Database;
+      print('Querying SQLite for reviews with kuliner_id: $kulinerId');
+      final List<Map<String, dynamic>> maps = await db.query(
+        'reviews',
+        where: 'kuliner_id = ?',
+        whereArgs: [kulinerId],
+      );
+      print('SQLite found ${maps.length} reviews for kuliner $kulinerId');
+      return List.generate(maps.length, (i) => Review.fromMap(maps[i]));
+    } catch (e) {
+      print('SQLite error getting reviews for kuliner $kulinerId: $e');
+      rethrow;
+    }
   }
 
   Future<List<Review>> _getReviewsForKulinerSembast(int kulinerId) async {
-    final db = await database as sembast.Database;
-    final finder =
-        sembast.Finder(filter: sembast.Filter.equals('kuliner_id', kulinerId));
-    final records = await _reviewStore!.find(db, finder: finder);
-    return records.map((record) => Review.fromMap(record.value)).toList();
+    try {
+      final db = await database as sembast.Database;
+      print('Querying Sembast for reviews with kuliner_id: $kulinerId');
+      final finder =
+          sembast.Finder(filter: sembast.Filter.equals('kuliner_id', kulinerId));
+      final records = await _reviewStore!.find(db, finder: finder);
+      print('Sembast found ${records.length} reviews for kuliner $kulinerId');
+      return records.map((record) => Review.fromMap(record.value)).toList();
+    } catch (e) {
+      print('Sembast error getting reviews for kuliner $kulinerId: $e');
+      rethrow;
+    }
   }
 
-  Future<void> _updateKulinerRating(int kulinerId) async {
-    sqflite.Database db = await database as sqflite.Database;
-    List<Map<String, dynamic>> result = await db.rawQuery('''
-      SELECT AVG(rating) as avg_rating 
-      FROM reviews 
-      WHERE kuliner_id = ?
-    ''', [kulinerId]);
+  Future<void> updateKulinerRating(int kulinerId) async {
+    try {
+      print('Updating kuliner rating for kuliner ID: $kulinerId');
+      sqflite.Database db = await database as sqflite.Database;
+      List<Map<String, dynamic>> result = await db.rawQuery('''
+        SELECT AVG(rating) as avg_rating 
+        FROM reviews 
+        WHERE kuliner_id = ?
+      ''', [kulinerId]);
 
-    double avgRating = result.first['avg_rating'] ?? 0.0;
-    await db.update(
-      'kuliners',
-      {'rating': avgRating},
-      where: 'id = ?',
-      whereArgs: [kulinerId],
-    );
+      double avgRating = result.first['avg_rating'] ?? 0.0;
+      print('Calculated average rating: $avgRating');
+
+      final updateResult = await db.update(
+        'kuliners',
+        {'rating': avgRating},
+        where: 'id = ?',
+        whereArgs: [kulinerId],
+      );
+      print('Updated kuliner rating. Rows affected: $updateResult');
+    } catch (e) {
+      print('Error updating kuliner rating: $e');
+    }
   }
 
   // Additional CRUD operations for User
@@ -752,7 +955,7 @@ class DatabaseHelper {
 
     // Update kuliner rating after review update
     if (result > 0) {
-      await _updateKulinerRating(review.kulinerId);
+      await updateKulinerRating(review.kulinerId);
     }
 
     return result;
@@ -767,7 +970,7 @@ class DatabaseHelper {
     if (records.isNotEmpty) {
       await _reviewStore!.record(records.first.key).update(db, review.toMap());
       // Update kuliner rating after review update
-      await _updateKulinerRatingSembast(review.kulinerId);
+      await updateKulinerRatingSembast(review.kulinerId);
       return 1;
     }
     return 0;
@@ -803,7 +1006,7 @@ class DatabaseHelper {
 
     // Update kuliner rating after review deletion
     if (result > 0 && kulinerId > 0) {
-      await _updateKulinerRating(kulinerId);
+      await updateKulinerRating(kulinerId);
     }
 
     return result;
@@ -818,38 +1021,47 @@ class DatabaseHelper {
       int kulinerId = records.first.value['kuliner_id'] as int;
       await _reviewStore!.record(records.first.key).delete(db);
       // Update kuliner rating after review deletion
-      await _updateKulinerRatingSembast(kulinerId);
+      await updateKulinerRatingSembast(kulinerId);
       return 1;
     }
     return 0;
   }
 
-  Future<void> _updateKulinerRatingSembast(int kulinerId) async {
-    final db = await database as sembast.Database;
-    final finder =
-        sembast.Finder(filter: sembast.Filter.equals('kuliner_id', kulinerId));
-    final records = await _reviewStore!.find(db, finder: finder);
+  Future<void> updateKulinerRatingSembast(int kulinerId) async {
+    try {
+      print('Updating kuliner rating in Sembast for kuliner ID: $kulinerId');
+      final db = await database as sembast.Database;
+      final finder =
+          sembast.Finder(filter: sembast.Filter.equals('kuliner_id', kulinerId));
+      final records = await _reviewStore!.find(db, finder: finder);
 
-    if (records.isNotEmpty) {
-      double totalRating = 0;
-      for (var record in records) {
-        totalRating += record.value['rating'] as double;
-      }
-      double avgRating = totalRating / records.length;
+      if (records.isNotEmpty) {
+        double totalRating = 0;
+        for (var record in records) {
+          totalRating += record.value['rating'] as double;
+        }
+        double avgRating = totalRating / records.length;
+        print('Calculated average rating in Sembast: $avgRating');
 
-      // Update kuliner rating
-      final kulinerFinder =
-          sembast.Finder(filter: sembast.Filter.equals('id', kulinerId));
-      final kulinerRecords =
-          await _kulinerStore!.find(db, finder: kulinerFinder);
-      if (kulinerRecords.isNotEmpty) {
-        final updatedKuliner =
-            Map<String, dynamic>.from(kulinerRecords.first.value);
-        updatedKuliner['rating'] = avgRating;
-        await _kulinerStore!
-            .record(kulinerRecords.first.key)
-            .update(db, updatedKuliner);
+        // Update kuliner rating
+        final kulinerFinder =
+            sembast.Finder(filter: sembast.Filter.equals('id', kulinerId));
+        final kulinerRecords =
+            await _kulinerStore!.find(db, finder: kulinerFinder);
+        if (kulinerRecords.isNotEmpty) {
+          final updatedKuliner =
+              Map<String, dynamic>.from(kulinerRecords.first.value);
+          updatedKuliner['rating'] = avgRating;
+          await _kulinerStore!
+              .record(kulinerRecords.first.key)
+              .update(db, updatedKuliner);
+          print('Updated kuliner rating in Sembast successfully');
+        }
+      } else {
+        print('No reviews found for kuliner $kulinerId in Sembast');
       }
+    } catch (e) {
+      print('Error updating kuliner rating in Sembast: $e');
     }
   }
 

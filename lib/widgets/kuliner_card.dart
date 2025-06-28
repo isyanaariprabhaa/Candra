@@ -5,21 +5,30 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorite_provider.dart';
 import 'dart:io';
+import 'dart:convert';
 
 class KulinerCard extends StatelessWidget {
   final Kuliner kuliner;
   final VoidCallback? onTap;
+  final double? distance;
 
   const KulinerCard({
     super.key,
     required this.kuliner,
     this.onTap,
+    this.distance,
   });
 
   @override
   Widget build(BuildContext context) {
     final favoriteProvider = Provider.of<FavoriteProvider>(context);
-    final isFav = favoriteProvider.isFavorite(kuliner.id);
+    final isFav = favoriteProvider.isFavorite(kuliner.id ?? 0);
+    
+    // Debug print untuk memeriksa ID kuliner
+    if (kuliner.id == null || kuliner.id == 0) {
+      print('Warning: KulinerCard received kuliner with invalid ID: ${kuliner.id}');
+    }
+    
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 4,
@@ -44,47 +53,7 @@ class KulinerCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.grey[300],
                     ),
-                    child: kuliner.imageUrl != null &&
-                            kuliner.imageUrl!.isNotEmpty
-                        ? (kuliner.imageUrl!.startsWith('http')
-                            ? Image.network(
-                                kuliner.imageUrl!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Icon(
-                                    Icons.restaurant,
-                                    size: 80,
-                                    color: Colors.grey,
-                                  );
-                                },
-                              )
-                            : (kuliner.imageUrl!.startsWith('assets/')
-                                ? Image.asset(
-                                    kuliner.imageUrl!,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(
-                                        Icons.restaurant,
-                                        size: 80,
-                                        color: Colors.grey,
-                                      );
-                                    },
-                                  )
-                                : Image.file(
-                                    File(kuliner.imageUrl!),
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(
-                                        Icons.restaurant,
-                                        size: 80,
-                                        color: Colors.grey,
-                                      );
-                                    },
-                                  )))
-                        : Image.asset(
-                            'assets/images/default_kuliner.png',
-                            fit: BoxFit.cover,
-                          ),
+                    child: _buildImageWidget(),
                   ),
                 ),
 
@@ -209,28 +178,114 @@ class KulinerCard extends StatelessWidget {
                           ),
                         ],
                       ),
+                      // Tampilkan jarak jika tersedia
+                      if (distance != null && distance! < double.infinity)
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[50],
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.directions_walk,
+                                size: 14,
+                                color: Colors.blue[700],
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Jarak: ${distance! ~/ 1} m',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.blue[700],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: IconButton(
-              icon: Icon(
-                isFav ? Icons.favorite : Icons.favorite_border,
-                color: isFav ? Colors.red : Colors.grey,
+          // Hanya tampilkan tombol favorite jika ID kuliner valid
+          if (kuliner.id != null && kuliner.id! > 0)
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: Icon(
+                  isFav ? Icons.favorite : Icons.favorite_border,
+                  color: isFav ? Colors.red : Colors.grey,
+                ),
+                onPressed: () {
+                  favoriteProvider.toggleFavorite(kuliner.id!);
+                },
+                tooltip: isFav ? 'Hapus dari Favorite' : 'Tambah ke Favorite',
               ),
-              onPressed: () {
-                favoriteProvider.toggleFavorite(kuliner.id);
-              },
-              tooltip: isFav ? 'Hapus dari Favorite' : 'Tambah ke Favorite',
             ),
-          ),
         ],
       ),
     );
+  }
+
+  Widget _buildImageWidget() {
+    if (kuliner.imageUrl != null && kuliner.imageUrl!.isNotEmpty) {
+      if (kuliner.imageUrl!.startsWith('http')) {
+        return Image.network(
+          kuliner.imageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.restaurant,
+              size: 80,
+              color: Colors.grey,
+            );
+          },
+        );
+      } else if (kuliner.imageUrl!.startsWith('assets/')) {
+        return Image.asset(
+          kuliner.imageUrl!,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.restaurant,
+              size: 80,
+              color: Colors.grey,
+            );
+          },
+        );
+      } else if (kuliner.imageUrl!.startsWith('data:image/')) {
+        return Image.memory(
+          base64Decode(kuliner.imageUrl!.split(',').last),
+          fit: BoxFit.cover,
+        );
+      } else {
+        return Image.file(
+          File(kuliner.imageUrl!),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return const Icon(
+              Icons.restaurant,
+              size: 80,
+              color: Colors.grey,
+            );
+          },
+        );
+      }
+    } else {
+      return Image.asset(
+        'assets/images/ayam_betutu.jpeg',
+        fit: BoxFit.cover,
+      );
+    }
   }
 }

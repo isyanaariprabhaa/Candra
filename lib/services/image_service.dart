@@ -98,17 +98,27 @@ class ImageService {
   // Method utama untuk mendapatkan image URL
   static Future<String> getImageUrl(
       File? imageFile, String category, String name) async {
-    // Jika ada gambar yang dipilih, coba upload ke server
+    // Jika ada gambar yang dipilih, gunakan base64 untuk menyimpan gambar lokal
     if (imageFile != null) {
-      String? uploadedUrl = await uploadImageToServer(imageFile);
-      if (uploadedUrl != null) {
-        return uploadedUrl;
+      try {
+        // Coba convert ke base64 terlebih dahulu
+        String? base64Url = await convertImageToBase64(imageFile);
+        if (base64Url != null) {
+          print('Successfully converted image to base64');
+          return base64Url;
+        }
+      } catch (e) {
+        print('Error converting image to base64: $e');
       }
 
-      // Jika upload gagal, gunakan base64 (untuk testing)
-      String? base64Url = await convertImageToBase64(imageFile);
-      if (base64Url != null) {
-        return base64Url;
+      // Jika base64 gagal, coba upload ke server (opsional)
+      try {
+        String? uploadedUrl = await uploadImageToServer(imageFile);
+        if (uploadedUrl != null) {
+          return uploadedUrl;
+        }
+      } catch (e) {
+        print('Error uploading image to server: $e');
       }
     }
 

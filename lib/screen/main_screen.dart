@@ -21,7 +21,6 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const HomeScreen(),
     const SearchScreen(),
-    const AddKulinerScreen(),
     const ProfileScreen(),
   ];
 
@@ -38,6 +37,18 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _screens[_selectedIndex],
+      floatingActionButton: _selectedIndex == 1 
+          ? null // Tidak ada tombol add di search screen (index 1)
+          : FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddKulinerScreen()),
+                );
+              },
+              backgroundColor: Colors.green,
+              child: const Icon(Icons.add, color: Colors.white),
+            ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -93,18 +104,6 @@ class _MainScreenState extends State<MainScreen> {
                 color: Colors.orange[600],
               ),
               label: 'Search',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.add_circle_rounded,
-                size: 24,
-              ),
-              activeIcon: Icon(
-                Icons.add_circle_rounded,
-                size: 24,
-                color: Colors.orange[600],
-              ),
-              label: 'Add',
             ),
             BottomNavigationBarItem(
               icon: Icon(

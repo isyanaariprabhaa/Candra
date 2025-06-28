@@ -10,6 +10,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'dart:convert';
 import 'package:shimmer/shimmer.dart';
 
 class KulinerDetailScreen extends StatefulWidget {
@@ -35,6 +36,8 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
 
   void _loadReviews() async {
     try {
+      print('Loading reviews for kuliner ID: ${widget.kuliner.id}');
+      
       setState(() {
         _isLoading = true;
       });
@@ -42,11 +45,14 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
       final reviews = await Provider.of<KulinerProvider>(context, listen: false)
           .getReviewsForKuliner(widget.kuliner.id!);
 
+      print('Loaded ${reviews.length} reviews');
+
       if (mounted) {
         setState(() {
           _reviews = reviews;
           _isLoading = false;
         });
+        print('Reviews state updated. Total reviews: ${_reviews.length}');
       }
     } catch (e) {
       print('Error loading reviews: $e');
@@ -101,7 +107,7 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
           color: Colors.grey[200],
           child: Center(
             child: Image.asset(
-              'assets/images/default_kuliner.png',
+              'assets/images/ayam_betutu.jpeg',
               width: 100,
               height: 100,
               fit: BoxFit.contain,
@@ -122,7 +128,7 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
               color: Colors.grey[200],
               child: Center(
                 child: Image.asset(
-                  'assets/images/default_kuliner.png',
+                  'assets/images/ayam_betutu.jpeg',
                   width: 100,
                   height: 100,
                   fit: BoxFit.contain,
@@ -154,7 +160,7 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
               color: Colors.grey[200],
               child: Center(
                 child: Image.asset(
-                  'assets/images/default_kuliner.png',
+                  'assets/images/ayam_betutu.jpeg',
                   width: 100,
                   height: 100,
                   fit: BoxFit.contain,
@@ -163,20 +169,80 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
             );
           },
         );
-      } else {
-        imageWidget = Container(
-          height: 200,
-          width: double.infinity,
-          color: Colors.grey[200],
-          child: Center(
-            child: Image.asset(
-              'assets/images/default_kuliner.png',
-              width: 100,
-              height: 100,
-              fit: BoxFit.contain,
+      } else if (imageUrl.startsWith('data:image/')) {
+        // Handle base64 images
+        try {
+          imageWidget = Image.memory(
+            base64Decode(imageUrl.split(',').last),
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 200,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[200],
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/ayam_betutu.jpeg',
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          );
+        } catch (e) {
+          imageWidget = Container(
+            height: 200,
+            width: double.infinity,
+            color: Colors.grey[200],
+            child: Center(
+              child: Image.asset(
+                'assets/images/ayam_betutu.jpeg',
+                width: 100,
+                height: 100,
+                fit: BoxFit.contain,
+              ),
             ),
-          ),
-        );
+          );
+        }
+      } else {
+        // Try as file path
+        try {
+          imageWidget = Image.file(
+            File(imageUrl),
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: 200,
+            errorBuilder: (context, error, stackTrace) {
+              return Container(
+                color: Colors.grey[200],
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/ayam_betutu.jpeg',
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              );
+            },
+          );
+        } catch (e) {
+          imageWidget = Container(
+            height: 200,
+            width: double.infinity,
+            color: Colors.grey[200],
+            child: Center(
+              child: Image.asset(
+                'assets/images/ayam_betutu.jpeg',
+                width: 100,
+                height: 100,
+                fit: BoxFit.contain,
+              ),
+            ),
+          );
+        }
       }
       return ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
@@ -189,7 +255,7 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
         color: Colors.grey[200],
         child: Center(
           child: Image.asset(
-            'assets/images/default_kuliner.png',
+            'assets/images/ayam_betutu.jpeg',
             width: 100,
             height: 100,
             fit: BoxFit.contain,
@@ -581,12 +647,15 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
 
   void _submitReview(int rating, String comment) async {
     try {
+      print('Submitting review with rating: $rating, comment: $comment');
+      
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final kulinerProvider =
           Provider.of<KulinerProvider>(context, listen: false);
 
       // Check if user is logged in
       if (authProvider.currentUser == null) {
+        print('User not logged in');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please login to add a review')),
         );
@@ -595,6 +664,7 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
 
       // Check if comment is not empty
       if (comment.trim().isEmpty) {
+        print('Comment is empty');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please enter a comment')),
         );
@@ -634,13 +704,24 @@ class _KulinerDetailScreenState extends State<KulinerDetailScreen> {
         username: authProvider.currentUser!.username,
       );
 
-      await kulinerProvider.addReview(review);
+      print('Created review object: ${review.toMap()}');
+
+      final success = await kulinerProvider.addReview(review);
+      print('Review submission result: $success');
 
       if (mounted) {
-        _loadReviews(); // Refresh reviews
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Review added successfully!')),
-        );
+        if (success) {
+          // Add a small delay to ensure data is saved
+          await Future.delayed(const Duration(milliseconds: 500));
+          _loadReviews(); // Refresh reviews
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Review added successfully!')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to add review')),
+          );
+        }
       }
     } catch (e) {
       print('Error submitting review: $e');

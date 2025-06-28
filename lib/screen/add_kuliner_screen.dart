@@ -365,15 +365,7 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
               title: const Text('Ambil dari Kamera'),
               onTap: () {
                 Navigator.of(context).pop();
-                _pickImage(ImageSource.camera);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Pilih dari Galeri'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _pickImage(ImageSource.gallery);
+                _pickImage();
               },
             ),
           ],
@@ -382,32 +374,24 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
     );
   }
 
-  Future<void> _pickImage(ImageSource source) async {
+  Future<void> _pickImage() async {
     try {
       setState(() {
         _imageError = null;
       });
 
-      bool permissionGranted = false;
-      if (source == ImageSource.camera) {
-        permissionGranted =
-            await PermissionHelper.requestCameraPermission(context);
-      } else {
-        permissionGranted =
-            await PermissionHelper.requestStoragePermission(context);
-      }
+      // Hanya kamera yang diizinkan
+      bool permissionGranted = await PermissionHelper.requestCameraPermission(context);
       if (!permissionGranted) {
         setState(() {
-          _imageError = source == ImageSource.camera
-              ? 'Camera permission is required.'
-              : 'Storage permission is required to select images from gallery.';
+          _imageError = 'Camera permission is required.';
         });
         return;
       }
 
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
-        source: source,
+        source: ImageSource.camera,
         maxWidth: 1024,
         maxHeight: 1024,
         imageQuality: 85,
@@ -432,7 +416,7 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
       }
     } catch (e) {
       setState(() {
-        _imageError = 'Failed to pick image: ${e.toString()}';
+        _imageError = 'Failed to pick image: ${e.toString()}';
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -525,14 +509,17 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
         String imageUrl = '';
         if (_pickedImage != null) {
           File imageFile = File(_pickedImage!.path);
+          print('Processing image file: ${imageFile.path}');
           imageUrl = await ImageService.getImageUrl(
               imageFile, _selectedCategory, _nameController.text);
+          print('Image URL from ImageService: $imageUrl');
         }
         // Jika imageUrl masih kosong/null, fallback ke default
         if (imageUrl.isEmpty || imageUrl == 'null') {
           imageUrl = ImageService.getCategoryImageUrl(_selectedCategory);
+          print('Using fallback image URL: $imageUrl');
         }
-        print('Image URL yang disimpan: ' + imageUrl);
+        print('Final Image URL yang disimpan: $imageUrl');
 
         final kuliner = Kuliner(
           id: 0,
@@ -560,6 +547,9 @@ class _AddKulinerScreenState extends State<AddKulinerScreen> {
               backgroundColor: Colors.green,
             ),
           );
+
+          // Navigate back to home screen
+          Navigator.of(context).pop();
 
           // Clear form
           _nameController.clear();

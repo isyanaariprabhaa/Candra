@@ -20,6 +20,10 @@ class KulinerProvider extends ChangeNotifier {
 
     try {
       _kulinerList = await DatabaseHelper.instance.getAllKuliner();
+      print('Loaded ${_kulinerList.length} kuliner from database');
+      for (var kuliner in _kulinerList) {
+        print('Kuliner: ${kuliner.name}, ID: ${kuliner.id}');
+      }
     } catch (e) {
       print('Error loading kuliner: $e');
     }
@@ -57,7 +61,16 @@ class KulinerProvider extends ChangeNotifier {
 
       if (id > 0) {
         print('Successfully added kuliner with ID: $id');
-        await loadKuliner(); // Reload the list
+        await loadKuliner();
+        print('Kuliner list reloaded. Total items: ${_kulinerList.length}');
+        
+        // Debug: cek apakah kuliner baru ada di list
+        final newKuliner = _kulinerList.firstWhere(
+          (k) => k.name == kuliner.name && k.id != null && k.id! > 0,
+          orElse: () => kuliner,
+        );
+        print('New kuliner in list - ID: ${newKuliner.id}, Name: ${newKuliner.name}');
+        
         return true;
       } else {
         print('Failed to add kuliner - ID is 0 or negative');
@@ -107,22 +120,45 @@ class KulinerProvider extends ChangeNotifier {
 
   Future<bool> addReview(Review review) async {
     try {
+      print('Adding review: ${review.comment}');
+      print('Review data: ${review.toMap()}');
+
       final id = await DatabaseHelper.instance.insertReview(review);
+      print('Insert review result ID: $id');
+
       if (id > 0) {
+        print('Successfully added review with ID: $id');
+        
+        // Update kuliner rating after adding review
+        try {
+          await DatabaseHelper.instance.updateKulinerRating(review.kulinerId);
+          print('Updated kuliner rating after adding review');
+        } catch (e) {
+          print('Error updating kuliner rating: $e');
+        }
+        
         await loadKuliner(); // Reload to update ratings
+        print('Kuliner list reloaded after adding review. Total items: ${_kulinerList.length}');
         return true;
+      } else {
+        print('Failed to add review - ID is 0 or negative');
+        return false;
       }
     } catch (e) {
       print('Error adding review: $e');
+      print('Error stack trace: ${StackTrace.current}');
+      return false;
     }
-    return false;
   }
 
   Future<List<Review>> getReviewsForKuliner(int kulinerId) async {
     try {
-      return await DatabaseHelper.instance.getReviewsForKuliner(kulinerId);
+      print('Getting reviews for kuliner ID: $kulinerId');
+      final reviews = await DatabaseHelper.instance.getReviewsForKuliner(kulinerId);
+      print('Retrieved ${reviews.length} reviews for kuliner $kulinerId');
+      return reviews;
     } catch (e) {
-      print('Error getting reviews: $e');
+      print('Error getting reviews for kuliner $kulinerId: $e');
       return [];
     }
   }
