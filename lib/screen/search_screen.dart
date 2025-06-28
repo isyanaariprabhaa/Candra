@@ -22,6 +22,16 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _showNearest = false;
   Position? _userPosition;
 
+  // Kategori yang sama dengan add kuliner screen
+  final List<String> _categories = [
+    'Makanan Utama',
+    'Minuman',
+    'Dessert',
+    'Snack',
+    'Seafood',
+    'Vegetarian',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -173,13 +183,6 @@ class _SearchScreenState extends State<SearchScreen> {
     super.dispose();
   }
 
-  List<String> _getCategories(List kulinerList) {
-    final categories =
-        kulinerList.map((k) => k.category).toSet().toList().cast<String>();
-    categories.sort();
-    return categories;
-  }
-
   void _loadKulinerData() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<KulinerProvider>(context, listen: false).loadKuliner();
@@ -243,48 +246,42 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 ),
                 const SizedBox(height: 14),
-                Consumer<KulinerProvider>(
-                  builder: (context, kulinerProvider, child) {
-                    final categories =
-                        _getCategories(kulinerProvider.kulinerList);
-                    return SizedBox(
-                      height: 44,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: categories.length,
-                        separatorBuilder: (context, i) =>
-                            const SizedBox(width: 10),
-                        itemBuilder: (context, i) {
-                          final cat = categories[i];
-                          final selected = cat == _selectedCategory;
-                          return AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            child: ChoiceChip(
-                              label: Text(cat),
-                              selected: selected,
-                              onSelected: (val) {
-                                setState(() {
-                                  _selectedCategory = selected ? null : cat;
-                                });
-                              },
-                              selectedColor: const Color(0xFF43E97B),
-                              labelStyle: TextStyle(
-                                color:
-                                    selected ? Colors.white : Colors.green[800],
-                                fontWeight: FontWeight.bold,
-                              ),
-                              backgroundColor: Colors.green[50],
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: selected ? 4 : 0,
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
+                SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _categories.length,
+                    separatorBuilder: (context, i) =>
+                        const SizedBox(width: 10),
+                    itemBuilder: (context, i) {
+                      final cat = _categories[i];
+                      final selected = cat == _selectedCategory;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        curve: Curves.easeInOut,
+                        child: ChoiceChip(
+                          label: Text(cat),
+                          selected: selected,
+                          onSelected: (val) {
+                            setState(() {
+                              _selectedCategory = selected ? null : cat;
+                            });
+                          },
+                          selectedColor: const Color(0xFF43E97B),
+                          labelStyle: TextStyle(
+                            color:
+                                selected ? Colors.white : Colors.green[800],
+                            fontWeight: FontWeight.bold,
+                          ),
+                          backgroundColor: Colors.green[50],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: selected ? 4 : 0,
+                        ),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(

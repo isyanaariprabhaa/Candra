@@ -122,7 +122,7 @@ class DatabaseHelper {
     await db.insert('kuliners', {
       'name': 'Pie Susu Bali',
       'description': 'Cemilan manis khas Bali dengan isian susu lembut',
-      'category': 'Cemilan',
+      'category': 'Snack',
       'price_range': 'Rp 2.000 - 5.000',
       'address': 'Jl. By Pass Ngurah Rai, Bali',
       'latitude': -8.7482,
@@ -146,15 +146,28 @@ class DatabaseHelper {
       'created_at': DateTime.now().toIso8601String(),
     });
     await db.insert('kuliners', {
-      'name': 'Klepon Bali',
-      'description': 'Kue tradisional berisi gula merah dan kelapa parut',
-      'category': 'Kue',
-      'price_range': 'Rp 2.000 - 4.000',
+      'name': 'Sate Lilit Ikan',
+      'description': 'Sate lilit ikan khas Bali dengan bumbu tradisional',
+      'category': 'Seafood',
+      'price_range': 'Rp 15.000 - 25.000',
       'address': 'Jl. Gatot Subroto, Denpasar',
       'latitude': -8.6386,
       'longitude': 115.2167,
       'image_url': 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=600&q=80',
       'rating': 4.4,
+      'user_id': userId,
+      'created_at': DateTime.now().toIso8601String(),
+    });
+    await db.insert('kuliners', {
+      'name': 'Gado-gado Bali',
+      'description': 'Gado-gado khas Bali dengan bumbu kacang dan sayuran segar',
+      'category': 'Vegetarian',
+      'price_range': 'Rp 12.000 - 20.000',
+      'address': 'Jl. Raya Kuta, Kuta',
+      'latitude': -8.7237,
+      'longitude': 115.1750,
+      'image_url': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+      'rating': 4.1,
       'user_id': userId,
       'created_at': DateTime.now().toIso8601String(),
     });
